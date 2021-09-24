@@ -1,0 +1,13 @@
+{
+	"compilerOptions": {
+    "checkJs": true,
+		"baseUrl": ".",
+    "noImplicitAny": true,
+		"paths": {
+      "$components": ["src/components"],
+			"$utils": ["src/utils"],
+      "$routes": ["src/routes"],
+		}
+	},
+	"include": ["src/**/*.js", "src/**/*.svelte"]
+}

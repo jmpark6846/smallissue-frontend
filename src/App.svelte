@@ -1,12 +1,12 @@
 <script>
-	export let name;
+import Router from 'svelte-spa-router';
+import routes from './routes';
+import Layout from "./routes/layout.svelte";
 </script>
 
-<main>
-	<h1 class='text-white'>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
-</main>
-
+<Layout>
+	<Router {routes} />
+</Layout>
 <style global>
 @tailwind base;
 @tailwind components;
