@@ -1,6 +1,8 @@
 <script>
 import { navigate } from 'svelte-routing';
 import Button from '../components/Button.svelte';
+import token from '../store/token';
+import user from '../store/user';
 import api from '../utils/api';
 
 let errorMessage = '';
@@ -9,7 +11,8 @@ async function login_demo(){
   const demo_user = { email: 'demouser@naver.com', password: 'demouser' };
   const res = await api.post('accounts/login/', demo_user);
   if(res.status === 200){
-    api.defaults.headers.common['Authorization'] = res.data.access_token;
+    token.set({ refresh: res.data.refresh_token });
+    user.set(res.data.user);
     navigate("/")
   }else{
     errorMessage="로그인에 실패했습니다."
