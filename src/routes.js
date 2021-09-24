@@ -1,13 +1,11 @@
-import index from './routes/index.svelte';
-import projects from './routes/projects.svelte';
-import login from './routes/login.svelte'
+import index from '$routes/index.svelte';
+import projects from '$routes/projects.svelte';
 
 const routes = {
   '/': index,
   '/projects': projects,
-  '/login': login
+  // '/login': login
   // '/products/:id': ProductDetail,
-  // '/login': Login,
   // '/signup': Signup
 }
 

@@ -6,7 +6,10 @@ import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 import sveltePreprocess from "svelte-preprocess";
 import alias from '@rollup/plugin-alias';
+import replace from '@rollup/plugin-replace';
+import dotenv from 'dotenv';
 
+dotenv.config()
 const production = !process.env.ROLLUP_WATCH;
 
 function serve() {
@@ -57,6 +60,7 @@ export default {
 			preprocess: sveltePreprocess({
         sourceMap: !production,
         postcss: true,
+				replace:[['process.env.BASE_URL', JSON.stringify(process.env.BASE_URL)],]
       }),
 		}),
 		// we'll extract any component CSS out into
