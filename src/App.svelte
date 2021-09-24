@@ -1,16 +1,14 @@
 <script>
 import { Router, Route } from 'svelte-routing';
-import routes from './routes';
 import Index from './routes/index.svelte';
 import Layout from "./routes/layout.svelte";
 import Login from './routes/login.svelte';
-
 </script>
 
 <Layout>
 	<Router>
-		<Route path='/' component={Index} />
 		<Route path='/login' component={Login} />
+		<Route path='/' component={Index} />
 	</Router>
 
 </Layout>
@@ -18,4 +16,9 @@ import Login from './routes/login.svelte';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html, body, #svelte {
+  height: 100%;
+}
+
 </style>

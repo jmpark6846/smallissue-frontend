@@ -6,8 +6,8 @@ import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 import sveltePreprocess from "svelte-preprocess";
 import alias from '@rollup/plugin-alias';
-import replace from '@rollup/plugin-replace';
 import dotenv from 'dotenv';
+import json from '@rollup/plugin-json';
 
 dotenv.config()
 const production = !process.env.ROLLUP_WATCH;
@@ -34,7 +34,7 @@ function serve() {
 }
 
 const aliases = alias({
-  resolve: ['.svelte', '.js'], //optional, by default this will just look for .js files or folders
+  
   entries: [
     { find: '$components', replacement: 'src/components' },
     { find: '$utils', replacement: 'src/utils' },
@@ -60,7 +60,7 @@ export default {
 			preprocess: sveltePreprocess({
         sourceMap: !production,
         postcss: true,
-				replace:[['process.env.BASE_URL', JSON.stringify(process.env.BASE_URL)],]
+				replace:[['BASE_URL', JSON.stringify(process.env.BASE_URL)],]
       }),
 		}),
 		// we'll extract any component CSS out into
@@ -77,7 +77,7 @@ export default {
 			dedupe: ['svelte']
 		}),
 		commonjs(),
-
+		json(),
 		// In dev mode, call `npm run start` once
 		// the bundle has been generated
 		!production && serve(),

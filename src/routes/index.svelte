@@ -3,5 +3,5 @@
 </svelte:head>
 
 <script>
-  
+  console.log(BASE_URL)
 </script>

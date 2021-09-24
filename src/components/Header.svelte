@@ -1,6 +1,9 @@
 <script>
-import { link } from 'svelte-routing';
-
+import { link, navigate } from 'svelte-routing';
+function logout(){
+  document.cookie.header['set-cookie']=['access=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT','refresh=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'];
+  navigate('/login')
+}
 </script>
 <header>
   <nav class='w-full mx-auto bg-white flex items-center justify-between'>
@@ -28,10 +31,3 @@ import { link } from 'svelte-routing';
     
   </nav>
 </header>
-
-
-<style>
-  nav li.active{
-    font-weight: 700;
-  }
-</style>
