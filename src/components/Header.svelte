@@ -19,7 +19,7 @@ async function logout(){
 }
 </script>
 <header>
-  <nav class='w-full mx-auto bg-white flex items-center justify-between'>
+  <nav class='w-full mx-auto bg-white flex items-center justify-between border-b border-gray-300'>
     <div class='flex-none items-center pl-4 md:pl-6 lg:w-60 xl:w-72 py-4' > 
       <a class="font-medium md:text-xl text-1xl" href="/" use:link>smallissue</a>
     </div>

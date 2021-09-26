@@ -4,7 +4,7 @@ import Header from "$components/header.svelte";
   
 <Header />
 <main class='flex flex-row h-full'>
-  <div class='w-full bg-gray-100'>
+  <div class='w-full bg-gray-50'>
     <slot />
   </div>
 </main>

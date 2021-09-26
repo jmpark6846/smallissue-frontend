@@ -13,7 +13,7 @@ async function login_demo(){
   if(res.status === 200){
     token.set({ refresh: res.data.refresh_token });
     user.set(res.data.user);
-    navigate("/")
+    navigate("/projects")
   }else{
     errorMessage="로그인에 실패했습니다."
   }
