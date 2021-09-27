@@ -1,3 +1,9 @@
+@layer base{
+  .max-w-8xl{
+    max-width: 90rem;
+  }
+}
+
 @layer components{
   .btn {
     @apply py-2 px-4 rounded-md border-none text-sm bg-gray-100 hover:bg-gray-200;
@@ -19,5 +25,9 @@
 
   .input {
     @apply focus:border-blue-400 focus:ring-1 focus:ring-blue-400 focus:outline-none w-full text-sm text-black placeholder-gray-500 border border-gray-300 rounded-md py-2 px-3;
+  }
+
+  .input.error{
+    @apply border-red-400 focus:ring-red-400 text-red-600 placeholder-red-600 focus:outline-none focus:ring-1;
   }
 }

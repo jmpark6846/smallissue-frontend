@@ -1,6 +1,5 @@
 <script>
 import { link, navigate } from 'svelte-routing';
-import cookie from 'cookie'
 import user from '../store/user';
 import api from '../utils/api';
 import token from '../store/token';
@@ -9,8 +8,8 @@ async function logout(){
   const { refresh } = $token;
   const res = await api.post('accounts/logout/', { refresh });
   if(res.status === 200){
-    token.set({});
-    user.set({});
+    token.set(null);
+    user.set(null);
     navigate('/login')
   }
   else{
@@ -18,10 +17,13 @@ async function logout(){
   }
 }
 </script>
-<header>
-  <nav class='w-full mx-auto bg-white flex items-center justify-between border-b border-gray-300'>
-    <div class='flex-none items-center pl-4 md:pl-6 lg:w-60 xl:w-72 py-4' > 
+<header class='border-b border-gray-300  bg-white'>
+  <nav class='w-full mx-auto flex items-center justify-between max-w-8xl'>
+    <div class='flex flex-row items-center pl-4 md:pl-6 lg:w-60 xl:w-72 py-4' > 
       <a class="font-medium md:text-xl text-1xl" href="/" use:link>smallissue</a>
+      <div class="ml-3 flex flex-row gap-2">
+        <a class='btn-outline font-medium ' use:link href="/projects">프로젝트</a>
+      </div>
     </div>
 
     
@@ -35,7 +37,7 @@ async function logout(){
         </a>
       </li>
       <li class="pl-8" >
-        {#if $user.email }
+        {#if $user }
           <div on:click={logout} class='cursor-pointer'>
             logout
           </div>

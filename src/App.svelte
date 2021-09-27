@@ -1,5 +1,5 @@
 <script>
-import { Router, Route } from 'svelte-routing';
+import { Router, Route,  } from 'svelte-routing';
 import Index from './routes/index.svelte';
 import Layout from "./routes/layout.svelte";
 import Login from './routes/login.svelte';
@@ -7,6 +7,7 @@ import User from './routes/user.svelte';
 import Issue from './routes/projects/detail/index.svelte'
 import ProjectList from './routes/projects/list.svelte';
 import './global.css'
+import ProtectedRoute from './components/ProtectedRoute.svelte';
 </script>
 
 <Layout>
@@ -18,6 +19,7 @@ import './global.css'
 		<Route path='/' component={Index} />
 	</Router>
 </Layout>
+
 <style global>
 @import "tailwindcss/base";
 @import "tailwindcss/components";
