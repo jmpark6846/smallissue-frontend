@@ -28,10 +28,17 @@
     "tailwindcss": "^2.2.15"
   },
   "dependencies": {
+    "@editorjs/editorjs": "^2.22.2",
+    "@editorjs/list": "^1.6.2",
     "axios": "^0.21.4",
+    "cl-editor": "^2.2.2",
+    "isomorphic-dompurify": "^0.15.0",
     "lodash": "^4.17.21",
     "postcss-import": "^14.0.2",
     "sirv-cli": "^1.0.0",
-    "svelte-routing": "^1.6.0"
+    "svelte-navigator": "^3.1.5",
+    "svelte-routing": "^1.6.0",
+    "tailwind-content-placeholder": "^0.0.4",
+    "tinymce": "^5.9.2"
   }
 }

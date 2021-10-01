@@ -1,4 +1,6 @@
 import axios from "axios";
+import token from "../store/token";
+import user from '../store/user';
 
 const api = axios.create({
   baseURL: 'http://localhost:8000',
@@ -7,42 +9,45 @@ const api = axios.create({
 })
 
 let isTokenRefreshing = false;
-let refreshSubscribers = [];
+let refreshQueue = [];
 
-const onTokenRefreshed = () => {
-  refreshSubscribers.map((callback) => callback());
-};
 
-const addRefreshSubscriber = (callback) => {
-  refreshSubscribers.push(callback);
-};
+api.interceptors.response.use(response=>response, async error=> {
+  const { response, config } = error
+  const origianlRequest = config
 
-// api.interceptors.response.use(response=>response, async error=> {
-//   const { response, config } = error
-//   if(response.status === 401){
-//     if(response.statusText === 'Unauthorized'){
-//       if(response.data.code === 'token_not_valid'){
-//         return Promise.reject(error)  
-//       }
-
-//       if (!isTokenRefreshing) {
-//         isTokenRefreshing = true;
-
-//         const res = await api.post('accounts/token/refresh/');
-//         isTokenRefreshing = false;
-//         onTokenRefreshed();
-//       }
-//       const retryOriginalRequest = new Promise((resolve) => {
-//         addRefreshSubscriber(() => {
-//           resolve(api(config));
-//         });
-//       });
-//       return retryOriginalRequest;
+  if(response.status === 401 && response.statusText === 'Unauthorized'){    
+    if (!isTokenRefreshing) {
+      isTokenRefreshing = true;
       
-//     }
-//     return Promise.reject(error)  
-//   }
-// })
+      api.post('accounts/token/refresh/')
+      .then(()=>{
+        refreshQueue.forEach((p) => p.resolve());
+        refreshQueue = [];  
+      })
+      .catch(err => {
+        refreshQueue.forEach(p => p.reject(err));
+        refreshQueue = [];
+        console.error(err);
+      })
+      .finally(()=>{
+        isTokenRefreshing = false;
+      })
+    }
+
+    const retryOriginalRequest = new Promise((resolve, reject) => {
+      refreshQueue.push({
+        resolve: () => resolve(api(origianlRequest)),
+        reject: (err) => reject(err)
+      })
+    });
+    return retryOriginalRequest;
+  }
+
+  // logout
+  user.set(null);
+  return Promise.reject(error)  
+})
 
 export default api
 

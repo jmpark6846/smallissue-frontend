@@ -1,26 +1,23 @@
 <script>
-import { link, navigate } from 'svelte-routing';
+import { link, useNavigate, useLocation } from 'svelte-navigator';
 import user from '../store/user';
-import api from '../utils/api';
-import token from '../store/token';
+
+const navigate = useNavigate();
+const location = useLocation();
 
 async function logout(){
-  const { refresh } = $token;
-  const res = await api.post('accounts/logout/', { refresh });
-  if(res.status === 200){
-    token.set(null);
-    user.set(null);
-    navigate('/login')
-  }
-  else{
-    console.error(res.error);
-  }
+  // const res = await api.post('accounts/logout/', { refresh });
+  user.set(null);
+
+  const from = ($location.state && $location.state.from) || "/";
+  navigate(from, { replace: true });
+  
 }
 </script>
 <header class='border-b border-gray-300  bg-white'>
   <nav class='w-full mx-auto flex items-center justify-between max-w-8xl'>
     <div class='flex flex-row items-center pl-4 md:pl-6 lg:w-60 xl:w-72 py-4' > 
-      <a class="font-medium md:text-xl text-1xl" href="/" use:link>smallissue</a>
+      <a class="font-medium md:text-x l text-1xl" href="/" use:link>smallissue</a>
       <div class="ml-3 flex flex-row gap-2">
         <a class='btn-outline font-medium ' use:link href="/projects">프로젝트</a>
       </div>

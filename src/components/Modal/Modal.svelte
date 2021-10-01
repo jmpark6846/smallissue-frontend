@@ -2,28 +2,48 @@
 export let open;
 export let modal;
 export let toggle;
+export let wide;
+export let heightFull;
+
 
 window.onclick = function(event) {
-
   if (event.target == modal) {
     toggle();
   }
 }
+
 </script>
 
-<div bind:this={modal} 
-  class="main-modal modal-bg opacity-0 fixed w-full h-100 inset-0 z-50 overflow-hidden flex justify-center animated faster"
-  class:fadeIn={open}
-  class:z-50={open} 
-  class:-z-50={!open}
-  class:hidden={!open}>
-  <div class="w-11/12 md:max-w-md mx-auto rounded-lg bg-white border border-gray-300  fixed top-10" >  
+<div 
+  bind:this={modal} 
+  class={`main-modal modal-bg shadow-lg flex items-center opacity-0 fixed inset-0 z-50 overflow-hidden flex justify-center animated faster ${ open ? 'fadeIn z-50' : '-z-50 hidden'}`}>
+  <div class={`${wide ? "wide" : ""} modal-section mx-auto rounded-lg bg-white border border-gray-300  fixed `}>  
     <slot />
   </div>
 </div>
 
 
 <style>
+  .modal-section { 
+    overflow:auto;
+  }
+  .modal-section.wide{
+    width: 100%;
+    height: 100%;
+  }
+  @media (min-width: 1024px) {
+    .modal-section.wide{
+      width: calc(100% - 25rem);
+      height: calc(100% - 10rem);
+    }
+  }
+  @media (min-width: 1280px) {
+    /* .modal-section.wide{
+      width: calc(100% - 50rem);
+      height: calc(100% - 10rem);
+    } */
+  }
+  
   .modal-bg {
     background-color: rgba(0,0,0,0.5);
   }

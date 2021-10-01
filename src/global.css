@@ -2,23 +2,29 @@
   .max-w-8xl{
     max-width: 90rem;
   }
+
+  .min-h-10 {
+    min-height: 2.5rem/* 40px */;
+  }
 }
 
 @layer components{
   .btn {
-    @apply py-2 px-4 rounded-md border-none text-sm bg-gray-100 hover:bg-gray-200;
+    @apply py-2 px-4 rounded-md border-none text-sm bg-gray-100 hover:bg-gray-200 focus:bg-gray-300;
     @apply text-gray-500 hover:text-gray-600;/* transition duration-150; */
   }
   .btn-outline { 
-    @apply btn bg-white hover:bg-white;
+    @apply btn bg-white;
   }
   .btn-primary {
     @apply btn bg-primary hover:bg-primary-dark text-white hover:text-gray-50;
   }
   .btn-blue{
-    @apply btn bg-blue-100 hover:bg-blue-200 text-blue-600 hover:text-blue-800 border-none;
+    @apply btn bg-blue-100 hover:bg-blue-200 focus:bg-blue-300 text-blue-600 hover:text-blue-800 border-none;
   }
-
+  .btn-green{
+    @apply btn bg-green-100 hover:bg-green-200 focus:bg-green-300 text-green-600 hover:text-green-800 border-none;
+  }
   .card {
     @apply border border-gray-300 rounded-md shadow-sm bg-white py-3 px-4;
   }
@@ -30,4 +36,48 @@
   .input.error{
     @apply border-red-400 focus:ring-red-400 text-red-600 placeholder-red-600 focus:outline-none focus:ring-1;
   }
+  
+  .label{
+    @apply text-xs px-2 py-1 rounded-md ;
+  }
+
+  .label-gray{
+    @apply label bg-gray-100 text-gray-800;
+  }
+
+  .label-blue{
+    @apply label bg-blue-100 text-blue-800;
+  }
+
+  .label-green{
+    @apply label bg-green-100 text-green-800;
+  }
+  
+  .nav-item{
+    @apply py-2 px-2 cursor-pointer;
+    line-height: initial;
+  }
+  .nav .btn-outline{
+    @apply py-2 px-2 cursor-pointer;
+    @apply text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-300 rounded-md;
+    line-height: initial;
+  }
+  .nav-item.outline{
+    @apply text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-300 rounded-md;
+  }
+
+  .nav-item.tabs{
+    @apply text-gray-700 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 focus:bg-gray-300 rounded-md;
+  }
+
+  .nav-item.active{
+    @apply bg-gray-500 text-white hover:bg-gray-600 hover:text-gray-100; 
+  }
+
+  .dropdown:focus-within .dropdown-menu {
+    opacity:1;
+    transform: translate(0) scale(1);
+    visibility: visible;
+  }
 }
+

@@ -1,9 +1,12 @@
 <script>
-import { navigate } from 'svelte-routing';
+import { useNavigate, useLocation } from "svelte-navigator";
 import Button from '../components/Button.svelte';
-import token from '../store/token';
 import user from '../store/user';
 import api from '../utils/api';
+
+const navigate = useNavigate();
+const location = useLocation();
+
 
 let errorMessage = '';
 
@@ -11,9 +14,9 @@ async function login_demo(){
   const demo_user = { email: 'demouser@naver.com', password: 'demouser' };
   const res = await api.post('accounts/login/', demo_user);
   if(res.status === 200){
-    token.set({ refresh: res.data.refresh_token });
     user.set(res.data.user);
-    navigate("/projects")
+    const from = ($location.state && $location.state.from) || "/projects";
+    navigate(from, { replace: true });
   }else{
     errorMessage="로그인에 실패했습니다."
   }
