@@ -146,7 +146,7 @@ async function updateIssue(index, updated){
 </section>
 {:else}
 <section class='px-4 md:px-0 py-5 h-full'>
-  <h1 class='text-2xl font-semibold mb-4'>{project.name}</h1>
+  <h1 class='text-3xl font-semibold mb-4'>{project.name}</h1>
   <div class='border rounded-md shadow-sm bg-white mb-1'>
     <div class='py-4 px-4'>이슈 {issues.length}개</div>
     

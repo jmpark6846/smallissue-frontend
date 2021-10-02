@@ -6,13 +6,6 @@ export let label = "";
 export let reset = false;
 export let right = false;
 $: selected = menus.find(m => m.label === label)
-$: {
-  if(String(label)){
-    console.log('string')
-  }else{
-    console.log('not string')
-  }
-}
 let open = false;
 const dispatch = createEventDispatcher()
 

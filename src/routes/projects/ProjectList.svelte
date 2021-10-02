@@ -34,7 +34,6 @@ function handlClickProject(id){
 onMount(async ()=>{
   try {
     const res = await api.get('/projects/');
-    console.log(res.data);
     projects = res.data;
     loading = false;
   } catch (error) {
@@ -85,7 +84,7 @@ async function submit(){
     key = "";
     name = "";
   }catch(e){
-    console.log(e.response.data)
+    console.error(e)
   }
 }
 </script>

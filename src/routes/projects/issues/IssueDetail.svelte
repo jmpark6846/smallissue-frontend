@@ -79,11 +79,9 @@ async function updateIssue(updated){
   data['project'] = data.project.id
   data['assignee'] = data.assignee ? data.assignee.id : null
   data = {...data, ...updated}
-  console.log(data)
   try {
     const res = await api.put(ISSUE_DETAIL_URL, data);
     issue = res.data 
-    console.log(issue)
   } catch (error) {
     console.error(error);
   }
@@ -117,6 +115,7 @@ async function modalBodySave(){
   isModalBodyEditing = false;
   await updateIssue({body: issue.body})
   editor.destroy()
+  editorEl.innerHTML = `<div class='text-gray-500'>${modalBodyPlaceholder}</div>`;
 }
 
 function modalBodyCancel(){
@@ -165,7 +164,7 @@ function modalBodyCancel(){
       <div class='body-section mb-4 card'>
         <div class="font-medium text-gray-800">설명</div>
         <div id="editor" bind:this={editorEl} class='p-1 hover:bg-gray-100 cursor-pointer rounded-md overflow -ml-1' on:click={handleModalBodyClick}>
-          {@html issue.body === "" ? `<div class='text-gray-500'>${modalBodyPlaceholder}</div>` : DOMPurify.sanitize(issue.body)}
+          {@html issue.body ? DOMPurify.sanitize(issue.body) : `<div class='text-gray-500'>${modalBodyPlaceholder}</div>`}
         </div>
     
         {#if isModalBodyEditing }
