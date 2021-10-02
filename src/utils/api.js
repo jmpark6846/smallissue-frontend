@@ -1,9 +1,7 @@
 import axios from "axios";
-import token from "../store/token";
 import user from '../store/user';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8000/',//process.env.BASE_URL,
   headers:{ 'Content-Type': 'application/json'},
   withCredentials: true,
 })

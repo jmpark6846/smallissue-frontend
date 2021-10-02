@@ -11,10 +11,14 @@ import ProjectDetail from './routes/projects/ProjectDetail.svelte'
 import IssueList from './routes/projects/issues/IssueList.svelte';
 import Example from './routes/example.svelte';
 import IssueDetail from './routes/projects/issues/IssueDetail.svelte';
+import api from './utils/api';
+api.defaults.baseURL = BASE_URL
 </script>
+
 <svelte:head>
 	<script src="https://cdn.tiny.cloud/1/hc0aj9chontfnpqrhoue1ms95l96pb9tcm1uroo8447dr9ek/tinymce/5/tinymce.min.js" referrerpolicy="origin" ></script>
 </svelte:head>
+
 <Router>
 	<Layout>
 		<Route path='/login' component={Login} />
