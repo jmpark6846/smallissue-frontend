@@ -1,5 +1,5 @@
 <script>
-  export let right;
+  export let right = false;
   export let width = 'w-48';
 </script>
 <div class="opacity-0 invisible dropdown-menu transform origin-top-right -translate-y-2 scale-95">
@@ -10,11 +10,3 @@
   </div>
 </div>
 
-<style>
-.dropdown:focus-within .dropdown-menu {
-    opacity:1;
-    transform: translate(0) scale(1);
-    visibility: visible;
-  }
-
-</style>

@@ -60,8 +60,11 @@ function tinymceloaded() {
   
 
 <div >tinymce</div>
-<div id="editor">
+<!-- <div id="editor">
   {@html content}
-</div>
-  
+</div> -->
+
+
+
+<textarea class="w-64 border mx-auto"/>
     

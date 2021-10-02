@@ -2,22 +2,22 @@
 import debounce from 'lodash/debounce'
 
 import { onMount } from 'svelte';
-import Modal from '../../../components/Modal/Modal.svelte';
-import ModalTitle from '../../../components/Modal/ModalTitle.svelte';
-import ModalBody from '../../../components/Modal/ModalBody.svelte';
-import ModalFooter from '../../../components/Modal/ModalFooter.svelte';
-import TextareaEditable from '../../../components/TextareaEditable.svelte';
+import Modal from '../../components/Modal/Modal.svelte';
+import ModalTitle from '../../components/Modal/ModalTitle.svelte';
+import ModalBody from '../../components/Modal/ModalBody.svelte';
+import ModalFooter from '../../components/Modal/ModalFooter.svelte';
+import TextareaEditable from '../../components/TextareaEditable.svelte';
 
 import { useParams } from 'svelte-navigator';
-import Nav from "../../../components/Nav/Nav.svelte";
-import NavItem from "../../../components/Nav/NavItem.svelte";
-import api from '../../../utils/api';
-import TabPanel from '../../../components/Nav/TabPanel.svelte';
-import TabPanels from '../../../components/Nav/TabPanels.svelte';
-import Dropdown from '../../../components/Dropdown/Dropdown.svelte';
-import DropdownButton from '../../../components/Dropdown/DropdownButton.svelte';
-import DropdownMenu from '../../../components/Dropdown/DropdownMenu.svelte';
-import DropdownItem from '../../../components/Dropdown/DropdownItem.svelte';
+import Nav from "../../components/Nav/Nav.svelte";
+import NavItem from "../../components/Nav/NavItem.svelte";
+import api from '../../utils/api';
+import TabPanel from '../../components/Nav/TabPanel.svelte';
+import TabPanels from '../../components/Nav/TabPanels.svelte';
+import Dropdown from '../../components/Dropdown/Dropdown.svelte';
+import DropdownButton from '../../components/Dropdown/DropdownButton.svelte';
+import DropdownMenu from '../../components/Dropdown/DropdownMenu.svelte';
+import DropdownItem from '../../components/Dropdown/DropdownItem.svelte';
 import DOMPurify from "dompurify";
 
 const params = useParams();
@@ -36,6 +36,8 @@ function toggle(){
   open = !open
   if (!open){
     selectedIssue = null;
+    isModalBodyEditing=false;
+    window.tinymce.activeEditor.destroy();
   }
 }
 
@@ -171,7 +173,7 @@ async function handleModalStatusChange(e){
 
 async function loadProjectUsers(){
   try {
-    const res = await api.get(`projects/${$params.id}/users`);
+    const res = await api.get(`projects/${$params.project_id}/users`);
     userList = res.data.users
   } catch (error) {
     console.error(error);
@@ -201,22 +203,6 @@ function tinymceloaded() {
         isModalBodyEditing = true;
         editor.setContent(selectedIssue.body);
       });
-      editor.on('input', debounce(async function(e){
-        const content = editor.getContent()
-        selectedIssue.body = content;
-        await updateIssue(selectedIssue.id, selectedIssue.index, {body: selectedIssue.body})
-      }, 300));
-      editor.on('blur', async function(e){
-        // const content = editor.getContent()
-        // selectedIssue.body = content;
-        // isModalBodyEditing = false;
-        // await updateIssue(selectedIssue.id, selectedIssue.index, {body: selectedIssue.body})
-        // editor.destroy()
-
-        // if(selectedIssue.body === ""){
-        //   editorEl.innerHTML=`<div class='text-gray-500'>${modalBodyPlaceholder}</div>`;
-        // }
-      })
     }
   })
 }
@@ -225,13 +211,28 @@ function handleModalBodyClick(){
   tinymceloaded()
 }
 
+async function modalBodySave(){
+  const editor = window.tinymce.activeEditor;
+  const content = editor.getContent()
+  selectedIssue.body = content;
+  isModalBodyEditing = false;
+  await updateIssue(selectedIssue.id, selectedIssue.index, {body: selectedIssue.body})
+  editor.destroy()
+}
+
+function modalBodyCancel(){
+  const editor = window.tinymce.activeEditor;
+  editor.setContent(selectedIssue.body);
+  isModalBodyEditing = false;
+  editor.destroy()
+}
 </script>
 <svelte:head>
   <title>프로젝트</title>
 </svelte:head>
 
 {#if loading }
-<section class='flex-auto px-4 md:px-6 py-5 h-full'>
+<section class='container flex-auto px-4 md:px-0 mx-auto py-5 h-full'>
   <h1 class='text-2xl font-semibold mb-2' class:cp-text={loading} />
   <div class='border rounded-md shadow-sm bg-white mb-1'>
     <div class='py-4 px-4'>이슈</div>
@@ -243,7 +244,7 @@ function handleModalBodyClick(){
   </div>
 </section>
 {:else}
-<section class='flex-auto px-4 md:px-6 py-5 h-full'>
+<section class='container flex-auto px-4 md:px-0 mx-auto py-5 h-full'>
   <h1 class='text-2xl font-semibold mb-2'>{project.name}</h1>
   <div class='border rounded-md shadow-sm bg-white mb-1'>
     <div class='py-4 px-4'>이슈 {issues.length}개</div>
@@ -294,7 +295,7 @@ function handleModalBodyClick(){
         <span class="text-gray-500 text-sm font-normal">{issues[selectedIssue.index].key}</span>
         <Nav>
           <li>
-            <Dropdown>
+            <Dropdown z={50}>
               <DropdownButton style="btn-outline">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -347,18 +348,18 @@ function handleModalBodyClick(){
               {@html selectedIssue.body === "" ? `<div class='text-gray-500'>${modalBodyPlaceholder}</div>` : DOMPurify.sanitize(selectedIssue.body)}
             </div>
             {#if isModalBodyEditing }
-            <!-- <div class="flex flex-row mt-2 gap-2">
-              <button class='btn-blue'>저장</button>
-              <button class='btn'>취소</button>
-            </div> -->
+            <div class="flex flex-row mt-2 gap-2">
+              <button class='btn-primary' on:click={modalBodySave}>저장</button>
+              <button class='btn-outline' on:click={modalBodyCancel}>취소</button>
+            </div>
             {/if}
           </div>
         </div>
         
         <div class="info-section flex flex-col gap-4 w-full md:w-72">
-          <div class='z-40'>
+          <div>
             <div class="text-sm text-gray-800 w-14 mb-1 font-medium">상태</div>
-            <Dropdown>
+            <Dropdown z={40}>
               <DropdownButton style={issueStatus[selectedIssue.status].btnClass}>
                 {issueStatus[selectedIssue.status].label}
                 <svg class="w-5 h-5 ml-2 -mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
@@ -370,7 +371,7 @@ function handleModalBodyClick(){
               </DropdownMenu>
             </Dropdown>
           </div>
-          <div class='z-30'>
+          <div>
             <div class="text-sm text-gray-800 w-14 mb-1 font-medium">담당자</div>
             <Dropdown>
               <DropdownButton 

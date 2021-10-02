@@ -40,7 +40,7 @@ function handleClick(){
 
 </script>
 <li class={`nav-item ${style}`} target={target}  class:active={active} bind:this={item} on:click={handleClick}>
-  {#if target || href }
+  {#if href }
     <a class='nav-link' href='#'><slot /></a>
   {:else}
     <slot/>

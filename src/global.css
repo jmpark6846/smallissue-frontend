@@ -14,7 +14,7 @@
     @apply text-gray-500 hover:text-gray-600;/* transition duration-150; */
   }
   .btn-outline { 
-    @apply btn bg-white;
+    @apply btn bg-white hover:bg-gray-100;
   }
   .btn-primary {
     @apply btn bg-primary hover:bg-primary-dark text-white hover:text-gray-50;
@@ -26,7 +26,7 @@
     @apply btn bg-green-100 hover:bg-green-200 focus:bg-green-300 text-green-600 hover:text-green-800 border-none;
   }
   .card {
-    @apply border border-gray-300 rounded-md shadow-sm bg-white py-3 px-4;
+    @apply border border-gray-300 rounded-md shadow-sm bg-white py-4 px-4;
   }
 
   .input {
@@ -54,7 +54,7 @@
   }
   
   .nav-item{
-    @apply py-2 px-2 cursor-pointer;
+    @apply py-1 px-1 cursor-pointer;
     line-height: initial;
   }
   .nav .btn-outline{

@@ -1,10 +1,10 @@
 <script>
-import Header from "$components/header.svelte";
+import Header from "../components/Header.svelte";
+
+
 </script>
   
 <Header />
-<main class='flex flex-row h-full bg-gray-50'>
-  <div class='w-full max-w-8xl ml-auto mr-auto'>
-    <slot />
-  </div>  
+<main class='mx-auto md:max-w-4xl'>
+  <slot />
 </main>

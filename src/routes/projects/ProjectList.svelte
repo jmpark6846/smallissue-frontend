@@ -28,7 +28,7 @@ function toggle(e){
 
 
 function handlClickProject(id){
-  navigate(`/projects/${id}/list`, { replace: true });
+  navigate(`/projects/${id}`, { replace: true });
 }
 
 onMount(async ()=>{
@@ -94,9 +94,9 @@ async function submit(){
   <title>프로젝트</title>
 </svelte:head>
 
-<section class='px-4 md:px-6 py-5'>
+<section class='px-4 md:px-0 py-5'>
   <div class="flex flex-row justify-between  mb-5">
-    <h1 class='text-2xl font-semibold'>프로젝트</h1>
+    <h1 class='text-3xl font-semibold'>프로젝트</h1>
     <button class="btn-primary flex items-center" on:click={toggle}>만들기</button>
   </div>
 

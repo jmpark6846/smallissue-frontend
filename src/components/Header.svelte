@@ -15,16 +15,16 @@ async function logout(){
 }
 </script>
 <header class='border-b border-gray-300  bg-white'>
-  <nav class='w-full mx-auto flex items-center justify-between max-w-8xl'>
-    <div class='flex flex-row items-center pl-4 md:pl-6 lg:w-60 xl:w-72 py-4' > 
-      <a class="font-medium md:text-x l text-1xl" href="/" use:link>smallissue</a>
+  <nav class='mx-auto md:max-w-4xl flex items-center justify-between max-w-8xl'>
+    <div class='flex flex-row items-center pl-4 md:pl-0 py-4' > 
+      <a class="font-medium md:text-xl text-xl" href="/" use:link>smallissue</a>
       <div class="ml-3 flex flex-row gap-2">
         <a class='btn-outline font-medium ' use:link href="/projects">프로젝트</a>
       </div>
     </div>
 
     
-    <ul class="flex flex-row px-4 md:px-6 py-4">
+    <ul class="flex flex-row pr-4 md:pr-0 py-4">
       <li class="pl-8">
         <a href="/user" use:link>
           <!-- Bell -->

@@ -1,11 +1,18 @@
 <script>
 import { createEventDispatcher } from "svelte";
+export let value;
 
 const dispatch = createEventDispatcher()
 let item;
+
 function handleClick(){
   const index = Array.from(item.parentElement.children).findIndex(i => i == item);
-  dispatch('click', { index })
+  const data = { index }
+
+  if(value !== undefined){
+    data.value = value
+  }
+  dispatch('click', data)
   item.blur();
 }
 </script>
