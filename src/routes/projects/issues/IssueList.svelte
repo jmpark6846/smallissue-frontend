@@ -1,6 +1,6 @@
 <script>
+import Sortable from 'sortablejs';
 import { onMount } from "svelte";
-
 import { navigate, useParams } from "svelte-navigator";
 import Dropdown from "../../../components/Dropdown/Dropdown.svelte";
 import DropdownButton from "../../../components/Dropdown/DropdownButton.svelte";
@@ -16,12 +16,28 @@ let isCreating = false;
 let newIssueBlock;
 let newIssueButton;
 let newIssueTitleInput;
-
+let issueListEl;
+let issuesSortable;
 let open = false;
 $: project = {};
 $: issues = [];
 $: ISSUES_URL = `/projects/${$params.id}/issues/`;
-
+$:{
+  if(issueListEl){
+    issuesSortable = Sortable.create(issueListEl, {
+      animation: 150,
+      ghostClass: 'blue-background-class',
+      onEnd: async function(e){
+        try {
+          let new_orders = issuesSortable.toArray()
+          await api.patch(ISSUES_URL+'set_orders/', {new_orders});
+        } catch (error) {
+          console.error(error)
+        }
+      }
+    });
+  }
+}
 function toggle(){
   open = !open
   if (!open){
@@ -150,9 +166,9 @@ async function updateIssue(index, updated){
   <div class='border rounded-md shadow-sm bg-white mb-1'>
     <div class='py-4 px-4'>이슈 {issues.length}개</div>
     
-    <div class='flex flex-col'>
+    <div bind:this={issueListEl} class='flex flex-col'>
       {#each issues as issue, issue_index (issue.id)}
-        <div class="w-full flex items-center gap-3  hover:bg-gray-50 hover:cursor-pointer py-3 px-4 border-t" on:click={navigate(ISSUES_URL+issue.id)}>
+        <div data-id={issue.id} class="flex flex-col md:items-center  md:flex-row gap-3 bg-white hover:bg-gray-50 hover:cursor-pointer py-3 px-4 border-t last:rounded-b-md" on:click={navigate(ISSUES_URL+issue.id)} style={`z-index: ${1000-issue_index}`}>
           <div class='text-gray-700 text-sm'>{issue.key}</div>
           <div class='flex-auto'>{issue.title}</div>
           <div class='gap-3 flex flex-row text-gray-800' on:click={(e)=>{ e.stopPropagation()}}>

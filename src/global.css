@@ -79,5 +79,9 @@
     transform: translate(0) scale(1);
     visibility: visible;
   }
+
+  .blue-background-class{
+    @apply hover:bg-blue-100 ring-blue-500 ring-1 ;
+  }
 }
 

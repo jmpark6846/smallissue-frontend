@@ -45,7 +45,7 @@ function tinymceloaded() {
 <svelte:head>
   <script src="https://cdn.tiny.cloud/1/hc0aj9chontfnpqrhoue1ms95l96pb9tcm1uroo8447dr9ek/tinymce/5/tinymce.min.js" referrerpolicy="origin" on:load={tinymceloaded}></script>
 </svelte:head>
-
+<!-- 
 <Dropdown>
   <DropdownButton on:click={handleButtonClick} style={styles[1]}>
     drop
@@ -60,11 +60,14 @@ function tinymceloaded() {
   
 
 <div >tinymce</div>
-<!-- <div id="editor">
+<div id="editor">
   {@html content}
 </div> -->
 
 
 
-<textarea class="w-64 border mx-auto"/>
-    
+<div class='grid grid-cols-1 md:grid-cols-12 h-80'>
+  <div class='section-a col-start-1 row-start-1 md:col-span-12  bg-blue-100'></div>
+  <div class='section-b col-start-1 row-start-3 md:row-start-2 md:col-span-9 bg-red-100'></div>
+  <div class='section-c col-start-1 row-start-2 md:col-start-10 md:col-span-3 md:row-span-1 md:row-start-2 bg-green-100'></div>
+</div>
