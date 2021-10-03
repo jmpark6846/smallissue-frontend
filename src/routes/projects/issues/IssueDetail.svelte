@@ -1,6 +1,6 @@
 <script>
+import dayjs from 'dayjs'
 import DOMPurify from "dompurify";
-
 import { onMount } from "svelte";
 import { useParams, link } from "svelte-navigator";
 import Dropdown from "../../../components/Dropdown/Dropdown.svelte";
@@ -12,7 +12,9 @@ import NavItem from "../../../components/Nav/NavItem.svelte";
 import TabPanel from "../../../components/Nav/TabPanel.svelte";
 import TabPanels from "../../../components/Nav/TabPanels.svelte";
 import TextareaEditable from "../../../components/TextareaEditable.svelte";
+import user from "../../../store/user";
 import api from "../../../utils/api";
+
 
 const params = useParams();
 $: PROJECT_URL = `/projects/${$params.project_id}/`;
@@ -36,16 +38,21 @@ async function getIssue(){
   }
 }
 
+let commentLoading = false;
+async function getComments(){
+  commentLoading = true;
+  try{
+    const res = await api.get(ISSUE_DETAIL_URL+'comments/');
+    comments = res.data
+    commentLoading = false;
+  }catch(error){
+    console.error(error);
+  }
+}
 onMount(async() => {
   await getIssue();
+  await getComments();
 });
-
-async function handleModalTitleBlur(e){
-  if (e.detail.value === ""){
-    return;
-  }
-  await updateIssue({title: e.detail.value})
-}
 
 async function handleModalStatusChange(e){
   let newStatus = Number(e.detail.index)
@@ -86,36 +93,54 @@ async function updateIssue(updated){
     console.error(error);
   }
 }
-
-const modalBodyPlaceholder = "설명을 입력해주세요.";
-function tinymceloaded() {
-  window.tinymce.init({
-    selector: 'div#editor',
+const placeholder = '내용을 입력해주세요.';
+const editorSettings = {
     menubar: false,
     resize:true,
-    placeholder: modalBodyPlaceholder,
-    auto_focus: 'editor',
+    placeholder,
     statusbar: false,
+}
+
+
+function tinymceloaded(elementId, content) {
+  const ed = new tinymce.Editor(elementId, {
+    ...editorSettings,
+    auto_focus: elementId,
     setup: function(editor) {
       editor.on('init', function(e) {
-        isModalBodyEditing = true;
-        editor.setContent(issue.body);
+        editor.setContent(content);
+        if(editor.id === editorEl.id){
+          isModalBodyEditing = true;
+        }else if(editor.id === commentInputEl.id){
+          isCommentEditing = true;
+        }
       });
     }
-  })
+  }, window.tinymce.EditorManager);
+
+  ed.render();
+}
+
+function modalBodyClick(){
+  tinymceloaded('editor', issue.body)
 }
 let isModalBodyEditing = false;
-function handleModalBodyClick(){
-  tinymceloaded()
-}
+
 async function modalBodySave(){
-  const editor = window.tinymce.activeEditor;
+  const editor = window.tinymce.get('editor');
   const content = editor.getContent()
-  issue.body = content;
+  
+  if(content ===''){
+    return;
+  }
+  
   isModalBodyEditing = false;
+  issue.body = content;
   await updateIssue({body: issue.body})
   editor.destroy()
-  editorEl.innerHTML = `<div class='text-gray-500'>${modalBodyPlaceholder}</div>`;
+  if(!issue.body){
+    editorEl.innerHTML = `<div class='text-gray-500'>${placeholder}</div>`;
+  }
 }
 
 function modalBodyCancel(){
@@ -123,6 +148,115 @@ function modalBodyCancel(){
   editor.setContent(issue.body);
   isModalBodyEditing = false;
   editor.destroy()
+  if(!issue.body){
+    editorEl.innerHTML = `<div class='text-gray-500'>${placeholder}</div>`;
+  }
+}
+
+let comments = [];
+let commentInputEl;
+let isCommentEditing = false;
+
+function commentInputClick(){
+  tinymceloaded('commentInput', '')
+}
+
+async function commentSave(editor_id, index){
+  const editor = window.tinymce.get(editor_id);
+  const content = editor.getContent()
+  
+  if(content === ''){
+    return;
+  }
+  
+  if(index !== undefined){
+    comments[index].editing = false;
+  }else{
+    isCommentEditing = false;
+  }
+  
+  const data = {
+    content,
+    author: $user.pk,
+    issue: issue.id
+  }
+  try {
+    const res = await api.post(ISSUE_DETAIL_URL+'comments/', data);
+    comments = [res.data, ...comments]
+  } catch (error) {
+    console.error(error);
+  }
+  editor.destroy()
+  const element = document.getElementById(editor_id)
+  element.innerHTML = `<div class='text-gray-500'>${placeholder}</div>`;
+}
+
+
+async function commentUpdate(editor_id, index){
+  const editor = window.tinymce.get(editor_id);
+  const content = editor.getContent()
+  let commentPlaceholder = "";
+
+  if(content === ''){
+    return;
+  }
+  
+  if(index !== undefined){
+    // 코멘트 수정 시
+    comments[index].editing = false;
+    commentPlaceholder = comments[index].content;
+  }else{
+    // 코멘트 입력부분
+    isCommentEditing = false;
+    commentPlaceholder = `<div class='text-gray-500'>${placeholder}</div>`;
+  }
+  
+  const data = { ...comments[index], author: comments[index].author.id, content }
+  try {
+    const res = await api.put(ISSUE_DETAIL_URL+'comments/'+comments[index].id+'/', data);
+    comments[index] = res.data
+  } catch (error) {
+    console.error(error);
+  }
+  editor.destroy()
+  const element = document.getElementById(editor_id)
+  element.innerHTML = commentPlaceholder;
+}
+
+function commentCancel(editor_id, index){
+  const editor = window.tinymce.get(editor_id);
+  let commentPlaceholder='';
+
+  if(index !== undefined){
+    // 코멘트 수정 시
+    comments[index].editing = false;
+    commentPlaceholder = comments[index].content
+  }else{
+    // 코멘트 입력부분
+    isCommentEditing = false;
+    commentPlaceholder = `<div class='text-gray-500'>${placeholder}</div>`;
+  }
+  editor.destroy()
+  
+  const element = document.getElementById(editor_id)
+  element.innerHTML = commentPlaceholder
+}
+
+async function commentDeleteClick(comment_id){
+  if(confirm('삭제하시겠습니까?')){
+    try {
+      const res = await api.delete(ISSUE_DETAIL_URL+'comments/'+comment_id);
+      comments = comments.filter(c=>c.id !== comment_id);
+      
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+  
+function commentUpdateClick(index){
+  comments[index].editing = true;
+  tinymceloaded('comment-'+comments[index].id, comments[index].content)
 }
 
 
@@ -163,8 +297,8 @@ function modalBodyCancel(){
   <div class='main-section  col-start-1 row-start-3 md:row-start-2 md:col-span-9 '>
       <div class='body-section mb-4 card'>
         <div class="font-medium text-gray-800">설명</div>
-        <div id="editor" bind:this={editorEl} class='p-1 hover:bg-gray-100 cursor-pointer rounded-md overflow -ml-1' on:click={handleModalBodyClick}>
-          {@html issue.body ? DOMPurify.sanitize(issue.body) : `<div class='text-gray-500'>${modalBodyPlaceholder}</div>`}
+        <div id="editor" bind:this={editorEl} class='p-1 hover:bg-gray-100 cursor-pointer rounded-md overflow -ml-1' on:click={modalBodyClick}>
+          {@html issue.body ? DOMPurify.sanitize(issue.body) : `<div class='text-gray-500'>${placeholder}</div>`}
         </div>
     
         {#if isModalBodyEditing }
@@ -179,13 +313,43 @@ function modalBodyCancel(){
         <div class="font-medium text-gray-800 mb-2">활동</div>
 
         <Nav tabpanels="tabpanels">
-          <NavItem target="panel-1" active><span class="text-sm">댓글</span></NavItem>
+          <NavItem target="panel-1" active on:click={async()=>await getComments()}><span class="text-sm">댓글</span></NavItem>
           <NavItem target="panel-2" ><span class="text-sm">히스토리</span></NavItem>
         </Nav>
         <div class="mt-2">
           <TabPanels id="tabpanels">
             <TabPanel id="panel-1" active>
-              댓글
+              <div id='commentInput' bind:this={commentInputEl} class='input mb-4' on:click={commentInputClick}>
+                <div class='text-gray-500'>{placeholder}</div>
+              </div>
+              {#if isCommentEditing }
+              <div class="flex flex-row mt-2 gap-2">
+                <button class='btn-primary' on:click={()=>commentSave('commentInput')}>저장</button>
+                <button class='btn-outline' on:click={()=>commentCancel('commentInput')}>취소</button>
+              </div>
+              {/if}      
+              
+              {#if commentLoading }
+                loading...
+              {:else}
+                {#each comments as comment, index (index)}
+                <div class='mb-5 '>
+                  <div class='font-medium'>{comment.author.username}<span class='ml-2 text-sm text-gray-500'>{dayjs(comment.updated_at).fromNow()}</span></div>
+                  <div id={`comment-${comment.id}`}>{@html DOMPurify.sanitize(comment.content)}</div>
+                  {#if comment.editing }
+                  <div class="flex flex-row mt-2 gap-2">
+                    <button class='btn-primary' on:click={()=>commentUpdate('comment-'+comment.id, index)}>저장</button>
+                    <button class='btn-outline' on:click={()=>commentCancel('comment-'+comment.id, index)}>취소</button>
+                  </div>
+                  {:else if comment.author.id === $user.pk }
+                  <div class="flex flex-row gap-2 text-sm text-gray-700 ">
+                    <div class='hover:text-gray-900 cursor-pointer' on:click={async ()=> await commentDeleteClick(comment.id)}>삭제</div>
+                    <div class='hover:text-gray-900 cursor-pointer' on:click={()=>commentUpdateClick(index)}>수정</div>
+                  </div>
+                  {/if}
+                </div>
+                {/each}
+              {/if}
             </TabPanel>
             <TabPanel id="panel-2">
               히스토리

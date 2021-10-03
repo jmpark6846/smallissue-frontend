@@ -1,4 +1,7 @@
 <script>
+import dayjs from 'dayjs'
+import 'dayjs/locale/ko'
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { Router, Route } from 'svelte-navigator';
 import PrivateRoute from './components/PrivateRoute/PrivateRoute.svelte';
 import Index from './routes/index.svelte';
@@ -12,6 +15,9 @@ import IssueList from './routes/projects/issues/IssueList.svelte';
 import Example from './routes/example.svelte';
 import IssueDetail from './routes/projects/issues/IssueDetail.svelte';
 import api from './utils/api';
+dayjs.locale('ko')
+dayjs.extend(relativeTime)
+
 api.defaults.baseURL = BASE_URL
 </script>
 

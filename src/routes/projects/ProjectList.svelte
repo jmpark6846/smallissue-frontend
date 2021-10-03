@@ -1,5 +1,6 @@
-
 <script>
+import Sortable from 'sortablejs';
+
 import debounce from 'lodash/debounce'
 import { useNavigate } from 'svelte-navigator';
 import Modal from '../../components/Modal/Modal.svelte';
@@ -21,6 +22,26 @@ let keyErrMsg="";
 let name = "";
 let key = "";
 $: projects = [];
+
+let projectListEl;
+let projectSortable;
+
+$:{
+  if(projectListEl){
+    projectSortable = Sortable.create(projectListEl, {
+      animation: 150,
+      ghostClass: 'blue-background-class',
+      onEnd: async function(e){
+        try {
+          let new_orders = projectSortable.toArray()
+          await api.patch(`/projects/set_orders/`, {new_orders});
+        } catch (error) {
+          console.error(error)
+        }
+      }
+    });
+  }
+}
 
 function toggle(e){
   open = !open
@@ -130,9 +151,9 @@ async function submit(){
     <div class='card hover:shadow-md cursor-pointer' class:cp-paragraph={loading}></div>
   </div>
   {:else}
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-    {#each projects as project (project.id)}
-    <div class='card hover:shadow-md cursor-pointer' on:click={()=>handlClickProject(project.id)}>
+  <div bind:this={projectListEl} class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+    {#each projects as project,index (project.id)}
+    <div data-id={project.id} class='card hover:shadow-md cursor-pointer' on:click={()=>handlClickProject(project.id)}>
       <div class='flex flex-row justify-between items-center mb-2'>
         <span class="font-medium">
           {project.name}

@@ -27,6 +27,7 @@ $:{
     issuesSortable = Sortable.create(issueListEl, {
       animation: 150,
       ghostClass: 'blue-background-class',
+      chosenClass: 'sortable-chosen',
       onEnd: async function(e){
         try {
           let new_orders = issuesSortable.toArray()
@@ -168,7 +169,7 @@ async function updateIssue(index, updated){
     
     <div bind:this={issueListEl} class='flex flex-col'>
       {#each issues as issue, issue_index (issue.id)}
-        <div data-id={issue.id} class="flex flex-col md:items-center  md:flex-row gap-3 bg-white hover:bg-gray-50 hover:cursor-pointer py-3 px-4 border-t last:rounded-b-md" on:click={navigate(ISSUES_URL+issue.id)} style={`z-index: ${1000-issue_index}`}>
+        <div data-id={issue.id} class="flex flex-col md:items-center  md:flex-row gap-3 hover:bg-gray-50 hover:cursor-pointer py-3 px-4 border-t last:rounded-b-md" on:click={navigate(ISSUES_URL+issue.id)}>
           <div class='text-gray-700 text-sm'>{issue.key}</div>
           <div class='flex-auto'>{issue.title}</div>
           <div class='gap-3 flex flex-row text-gray-800' on:click={(e)=>{ e.stopPropagation()}}>

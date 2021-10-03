@@ -4,7 +4,7 @@ import List from '@editorjs/list';
 import debounce from 'lodash/debounce'
 
 import { onMount } from 'svelte';
-
+import Editor from '../components/Editor.svelte';
 
 import Dropdown from '../components/Dropdown/Dropdown.svelte';
 import DropdownButton from '../components/Dropdown/DropdownButton.svelte';
@@ -71,3 +71,11 @@ function tinymceloaded() {
   <div class='section-b col-start-1 row-start-3 md:row-start-2 md:col-span-9 bg-red-100'></div>
   <div class='section-c col-start-1 row-start-2 md:col-start-10 md:col-span-3 md:row-span-1 md:row-start-2 bg-green-100'></div>
 </div>
+
+
+<Editor>
+  <div class="flex flex-row mt-2 gap-2">
+    <button class='btn-primary' on:click={save}>저장</button>
+    <button class='btn-outline' on:click={cancel}>취소</button>
+  </div>
+</Editor>
