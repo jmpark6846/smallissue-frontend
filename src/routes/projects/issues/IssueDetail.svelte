@@ -1,4 +1,5 @@
 <script>
+import { paginate, PaginationNav } from 'svelte-paginate'
 import dayjs from 'dayjs'
 import DOMPurify from "dompurify";
 import { onMount } from "svelte";
@@ -23,17 +24,18 @@ $: ISSUE_DETAIL_URL = `/projects/${$params.project_id}/issues/${$params.issue_id
 $: issue = {};
 let editorEl;
 let loading = true;
-let commentLoading = false;
+let commentLoading = true;
 let userList = [];
 let isModalBodyEditing = false;
 
-let comments = [];
+let comments = { list: [], count: null, page_size: null, current_page: null };
+let currentCommentPage = 1;
 let commentInputEl;
 let isCommentEditing = false;
 
-let history = [];
+let history = { list: [], count: null, page_size: null, current_page: null };
 let historyLoading = true;
-
+let currentHistoryPage = 1;
 const placeholder = '내용을 입력해주세요.';
 const editorSettings = {
     menubar: false,
@@ -63,10 +65,10 @@ async function getIssue(){
   }
 }
 
-async function getComments(){
+async function getComments(page_num){
   commentLoading = true;
   try{
-    const res = await api.get(ISSUE_DETAIL_URL+'comments/');
+    const res = await api.get(ISSUE_DETAIL_URL+'comments/?comment_page_num='+page_num);
     comments = res.data
     commentLoading = false;
   }catch(error){
@@ -189,7 +191,7 @@ async function commentSave(editor_id, index){
   }
   
   if(index !== undefined){
-    comments[index].editing = false;
+    comments.list[index].editing = false;
   }else{
     isCommentEditing = false;
   }
@@ -201,7 +203,7 @@ async function commentSave(editor_id, index){
   }
   try {
     const res = await api.post(ISSUE_DETAIL_URL+'comments/', data);
-    comments = [res.data, ...comments]
+    comments.list = [res.data, ...comments.list]
   } catch (error) {
     console.error(error);
   }
@@ -222,18 +224,18 @@ async function commentUpdate(editor_id, index){
   
   if(index !== undefined){
     // 코멘트 수정 시
-    comments[index].editing = false;
-    commentPlaceholder = comments[index].content;
+    comments.list[index].editing = false;
+    commentPlaceholder = comments.list[index].content;
   }else{
     // 코멘트 입력부분
     isCommentEditing = false;
     commentPlaceholder = `<div class='text-gray-500'>${placeholder}</div>`;
   }
   
-  const data = { ...comments[index], author: comments[index].author.id, content }
+  const data = { ...comments.list[index], author: comments.list[index].author.id, content }
   try {
-    const res = await api.put(ISSUE_DETAIL_URL+'comments/'+comments[index].id+'/', data);
-    comments[index] = res.data
+    const res = await api.put(ISSUE_DETAIL_URL+'comments/'+comments.list[index].id+'/', data);
+    comments.list[index] = res.data
   } catch (error) {
     console.error(error);
   }
@@ -248,8 +250,8 @@ function commentCancel(editor_id, index){
 
   if(index !== undefined){
     // 코멘트 수정 시
-    comments[index].editing = false;
-    commentPlaceholder = comments[index].content
+    comments.list[index].editing = false;
+    commentPlaceholder = comments.list[index].content
   }else{
     // 코멘트 입력부분
     isCommentEditing = false;
@@ -265,7 +267,7 @@ async function commentDeleteClick(comment_id){
   if(confirm('삭제하시겠습니까?')){
     try {
       const res = await api.delete(ISSUE_DETAIL_URL+'comments/'+comment_id);
-      comments = comments.filter(c=>c.id !== comment_id);
+      comments.list = comments.list.filter(c=>c.id !== comment_id);
       
     } catch (error) {
       console.error(error);
@@ -274,15 +276,15 @@ async function commentDeleteClick(comment_id){
 }
   
 function commentUpdateClick(index){
-  comments[index].editing = true;
-  tinymceloaded('comment-'+comments[index].id, comments[index].content)
+  comments.list[index].editing = true;
+  tinymceloaded('comment-'+comments.list[index].id, comments.list[index].content)
 }
 
-async function getHistory(){
+async function getHistory(page_num){
   historyLoading = true;
   try {
-    const res = await api.get(ISSUE_DETAIL_URL+'history/');
-    history = res.data.result
+    const res = await api.get(ISSUE_DETAIL_URL+'history/?history_page='+page_num);
+    history = res.data
     historyLoading = false;
   } catch (error) {
     console.error(error)
@@ -349,7 +351,7 @@ function stripTags(htmlStr){
 
         <Nav tabpanels="tabpanels">
           <NavItem target="panel-1" active on:click={async()=>await getComments()}><span class="text-sm">댓글</span></NavItem>
-          <NavItem target="panel-2" on:click={async()=>await getHistory()}><span class="text-sm">히스토리</span></NavItem>
+          <NavItem target="panel-2" on:click={async()=>await getHistory(1)}><span class="text-sm">히스토리</span></NavItem>
         </Nav>
         <div class="mt-2">
           <TabPanels id="tabpanels">
@@ -367,7 +369,7 @@ function stripTags(htmlStr){
               {#if commentLoading }
                 loading...
               {:else}
-                {#each comments as comment, index (index)}
+                {#each comments.list as comment, index (index)}
                 <div class='mb-5 '>
                   <div class='font-medium'>{comment.author.username}<span class='ml-2 text-sm text-gray-500'>{dayjs(comment.updated_at).fromNow()}</span></div>
                   <div id={`comment-${comment.id}`}>{@html DOMPurify.sanitize(comment.content)}</div>
@@ -384,13 +386,23 @@ function stripTags(htmlStr){
                   {/if}
                 </div>
                 {/each}
+                <div class="history-page-nav">
+                  <PaginationNav
+                    totalItems="{comments.count}"
+                    pageSize="{comments.page_size}"
+                    currentPage="{currentCommentPage}"
+                    limit="{2}"
+                    showStepOptions="{false}"
+                    on:setPage="{async (e) => {currentCommentPage = e.detail.page; await getComments(currentCommentPage);}}"
+                  />
+                </div>
               {/if}
             </TabPanel>
             <TabPanel id="panel-2">
               {#if historyLoading }
                 loading..
               {:else} 
-                {#each history as h }
+                {#each history.list as h }
                 <div class="mb-5">
                   {#if h.type === '+'}
                     <div>
@@ -435,6 +447,18 @@ function stripTags(htmlStr){
                   {/if}
                 </div>
                 {/each}
+                
+                <div class="history-page-nav">
+                  <PaginationNav
+                    totalItems="{history.count}"
+                    pageSize="{history.page_size}"
+                    currentPage="{currentHistoryPage}"
+                    limit="{2}"
+                    showStepOptions="{false}"
+                    on:setPage="{async (e) => {currentHistoryPage = e.detail.page; await getHistory(currentHistoryPage);}}"
+                  />
+                </div>
+
               {/if}
             </TabPanel>
           </TabPanels>
@@ -490,7 +514,4 @@ function stripTags(htmlStr){
     
   </div>
 </section>
-
-
-
 {/if}
