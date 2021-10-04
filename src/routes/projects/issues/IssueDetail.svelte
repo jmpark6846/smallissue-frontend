@@ -14,6 +14,7 @@ import TabPanels from "../../../components/Nav/TabPanels.svelte";
 import TextareaEditable from "../../../components/TextareaEditable.svelte";
 import user from "../../../store/user";
 import api from "../../../utils/api";
+import truncateString from '../../../utils/truncateString';
 
 
 const params = useParams();
@@ -22,6 +23,30 @@ $: ISSUE_DETAIL_URL = `/projects/${$params.project_id}/issues/${$params.issue_id
 $: issue = {};
 let editorEl;
 let loading = true;
+let commentLoading = false;
+let userList = [];
+let isModalBodyEditing = false;
+
+let comments = [];
+let commentInputEl;
+let isCommentEditing = false;
+
+let history = [];
+let historyLoading = true;
+
+const placeholder = '내용을 입력해주세요.';
+const editorSettings = {
+    menubar: false,
+    resize:true,
+    placeholder,
+    statusbar: false,
+}
+const issueAttrNames = {
+  title: '제목',
+  body: '설명',
+  assignee: '담당자',
+  status: '상태',
+}
 const issueStatus = [
   { label: "해야 할 일", btnClass: 'btn'}, 
   { label: "진행 중", btnClass: 'btn-blue'},
@@ -38,7 +63,6 @@ async function getIssue(){
   }
 }
 
-let commentLoading = false;
 async function getComments(){
   commentLoading = true;
   try{
@@ -54,13 +78,17 @@ onMount(async() => {
   await getComments();
 });
 
+async function handleTitleChange(e){
+  issue.title = e.detail.value
+  await updateIssue({ title: e.detail.value })
+}
+
 async function handleModalStatusChange(e){
   let newStatus = Number(e.detail.index)
   issue.status = newStatus
   await updateIssue({ status: newStatus })
 }
 
-let userList = [];
 
 async function loadProjectUsers(){
   try {
@@ -93,13 +121,6 @@ async function updateIssue(updated){
     console.error(error);
   }
 }
-const placeholder = '내용을 입력해주세요.';
-const editorSettings = {
-    menubar: false,
-    resize:true,
-    placeholder,
-    statusbar: false,
-}
 
 
 function tinymceloaded(elementId, content) {
@@ -108,9 +129,13 @@ function tinymceloaded(elementId, content) {
     auto_focus: elementId,
     setup: function(editor) {
       editor.on('init', function(e) {
+        if(!content){
+          content = ""
+        }
         editor.setContent(content);
         if(editor.id === editorEl.id){
           isModalBodyEditing = true;
+          console.log(isModalBodyEditing)
         }else if(editor.id === commentInputEl.id){
           isCommentEditing = true;
         }
@@ -124,15 +149,11 @@ function tinymceloaded(elementId, content) {
 function modalBodyClick(){
   tinymceloaded('editor', issue.body)
 }
-let isModalBodyEditing = false;
+
 
 async function modalBodySave(){
   const editor = window.tinymce.get('editor');
   const content = editor.getContent()
-  
-  if(content ===''){
-    return;
-  }
   
   isModalBodyEditing = false;
   issue.body = content;
@@ -153,9 +174,7 @@ function modalBodyCancel(){
   }
 }
 
-let comments = [];
-let commentInputEl;
-let isCommentEditing = false;
+
 
 function commentInputClick(){
   tinymceloaded('commentInput', '')
@@ -259,6 +278,22 @@ function commentUpdateClick(index){
   tinymceloaded('comment-'+comments[index].id, comments[index].content)
 }
 
+async function getHistory(){
+  historyLoading = true;
+  try {
+    const res = await api.get(ISSUE_DETAIL_URL+'history/');
+    history = res.data.result
+    historyLoading = false;
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+function stripTags(htmlStr){
+  const dom = new DOMParser().parseFromString(htmlStr, 'text/html');
+  const txt = dom.body.textContent;
+  return txt
+}
 
 </script>
 
@@ -290,7 +325,7 @@ function commentUpdateClick(index){
       <a href={PROJECT_URL} class=' hover:text-gray-700 mr-2' use:link>{issue.project.name}</a> / <a href={ISSUE_DETAIL_URL} class='ml-2 hover:text-gray-700' use:link>{issue.key}</a> 
     </div>
     <h1 class='text-3xl font-semibold -ml-1'>
-      <TextareaEditable content={issue.title} on:change={(e)=>issue.title = e.detail.value}/>
+      <TextareaEditable content={issue.title} on:change={handleTitleChange}/>
     </h1>
   </div>
 
@@ -314,7 +349,7 @@ function commentUpdateClick(index){
 
         <Nav tabpanels="tabpanels">
           <NavItem target="panel-1" active on:click={async()=>await getComments()}><span class="text-sm">댓글</span></NavItem>
-          <NavItem target="panel-2" ><span class="text-sm">히스토리</span></NavItem>
+          <NavItem target="panel-2" on:click={async()=>await getHistory()}><span class="text-sm">히스토리</span></NavItem>
         </Nav>
         <div class="mt-2">
           <TabPanels id="tabpanels">
@@ -352,7 +387,55 @@ function commentUpdateClick(index){
               {/if}
             </TabPanel>
             <TabPanel id="panel-2">
-              히스토리
+              {#if historyLoading }
+                loading..
+              {:else} 
+                {#each history as h }
+                <div class="mb-5">
+                  {#if h.type === '+'}
+                    <div>
+                      <span class='font-medium'>{h.user.username}</span> 이슈 생성됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
+                    </div>
+                  {:else}
+                  <div>
+                    <div>
+                      <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 업데이트됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
+                    </div> 
+                    <div class='flex items-center gap-1'>
+                      {#if h.field === 'assignee'}
+                      <div class=''>{h.old_value.username || "없음"}</div>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                      <div class=''>{h.new_value.username || "없음"}</div>
+  
+                      {:else if h.field === 'body'}
+                      <div style='word-break: keep-all;'>{truncateString(stripTags(h.old_value), 200) || "없음"}</div>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                      <div style='word-break: keep-all;'>{truncateString(stripTags(h.new_value), 200) || "없음"}</div>
+  
+                      {:else if h.field === 'status'}
+                      <div style='word-break: keep-all;'>{stripTags(issueStatus[h.old_value].label) || "없음"}</div>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                      <div style='word-break: keep-all;'>{stripTags(issueStatus[h.new_value].label) || "없음"}</div>
+  
+                      {:else if h.field === 'title'}
+                      <div style='word-break: keep-all;'>{h.old_value || "없음"}</div>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                      <div style='word-break: keep-all;'>{h.new_value || "없음"}</div>
+                      {/if}
+                    </div>
+                  </div>
+                  {/if}
+                </div>
+                {/each}
+              {/if}
             </TabPanel>
           </TabPanels>
         </div>
