@@ -6,6 +6,7 @@ import Dropdown from "../../../components/Dropdown/Dropdown.svelte";
 import DropdownButton from "../../../components/Dropdown/DropdownButton.svelte";
 import DropdownItem from "../../../components/Dropdown/DropdownItem.svelte";
 import DropdownMenu from "../../../components/Dropdown/DropdownMenu.svelte";
+import user from '../../../store/user';
 import api from "../../../utils/api";
 
 
@@ -100,7 +101,8 @@ async function createNewIssue(){
   try {
     const data = {
       title: newIssueTitleInput.value,
-      project: $params.id
+      project: $params.id,
+      author: $user.pk
     }
     const res = await api.post(`projects/${$params.id}/issues/`, data);
     issues = [ ...issues, res.data ];
