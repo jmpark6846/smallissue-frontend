@@ -41,6 +41,7 @@
     "sortablejs": "^1.14.0",
     "svelte-navigator": "^3.1.5",
     "svelte-routing": "^1.6.0",
+    "svelte-tags-input": "^2.8.1",
     "tailwind-content-placeholder": "^0.0.4",
     "tinymce": "^5.9.2"
   }

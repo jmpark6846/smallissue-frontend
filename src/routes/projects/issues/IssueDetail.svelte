@@ -1,5 +1,6 @@
 <script>
-import { paginate, PaginationNav } from 'svelte-paginate'
+import { PaginationNav } from 'svelte-paginate'
+import Tags from "svelte-tags-input";
 import dayjs from 'dayjs'
 import DOMPurify from "dompurify";
 import { onMount } from "svelte";
@@ -36,6 +37,9 @@ let isCommentEditing = false;
 let history = { list: [], count: null, page_size: null, current_page: null };
 let historyLoading = true;
 let currentHistoryPage = 1;
+let tags = [];
+let isTagEditing = false;
+
 const placeholder = '내용을 입력해주세요.';
 const editorSettings = {
     menubar: false,
@@ -48,6 +52,7 @@ const issueAttrNames = {
   body: '설명',
   assignee: '담당자',
   status: '상태',
+  tags:'태그'
 }
 const issueStatus = [
   { label: "해야 할 일", btnClass: 'btn'}, 
@@ -57,8 +62,10 @@ const issueStatus = [
 
 async function getIssue(){
   try {
-    const res = await api.get(ISSUE_DETAIL_URL);
-    issue = res.data;
+    const res = await Promise.all([
+      api.get(ISSUE_DETAIL_URL),
+    ]);
+    issue = res[0].data;
     loading = false;
   } catch (error) {
     console.error(error);
@@ -75,9 +82,10 @@ async function getComments(page_num){
     console.error(error);
   }
 }
+
 onMount(async() => {
   await getIssue();
-  await getComments();
+  await getComments(1);
 });
 
 async function handleTitleChange(e){
@@ -297,6 +305,17 @@ function stripTags(htmlStr){
   return txt
 }
 
+async function handleTags(event) {
+  const data = { tags: event.detail.tags }
+  try {
+    const res = await api.post(ISSUE_DETAIL_URL+'tags/', data)
+    issue.tags = res.data.tags
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+
 </script>
 
 <svelte:head>
@@ -350,7 +369,7 @@ function stripTags(htmlStr){
         <div class="font-medium text-gray-800 mb-2">활동</div>
 
         <Nav tabpanels="tabpanels">
-          <NavItem target="panel-1" active on:click={async()=>await getComments()}><span class="text-sm">댓글</span></NavItem>
+          <NavItem target="panel-1" active on:click={async()=>await getComments(1)}><span class="text-sm">댓글</span></NavItem>
           <NavItem target="panel-2" on:click={async()=>await getHistory(1)}><span class="text-sm">히스토리</span></NavItem>
         </Nav>
         <div class="mt-2">
@@ -404,50 +423,73 @@ function stripTags(htmlStr){
               {:else} 
                 {#each history.list as h }
                 <div class="mb-5">
-                  {#if h.type === '+'}
+                  {#if h.field === 'tags'}
+                    {#if h.type === "+"}
+                    <div>
+                      <div>
+                        <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 추가됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
+                      </div> 
+                      <div class='flex items-center gap-1'>
+                        <div style='label-gray word-break: keep-all;'>{h.new_value}</div>
+                      </div>
+                    </div>
+                    {:else if h.type === "-"}
+                    <div>
+                      <div>
+                        <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 삭제됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
+                      </div> 
+                      <div class='flex items-center gap-1'>
+                        <div style='label-gray word-break: keep-all;'>{h.new_value}</div>
+                      </div>
+                    </div>
+                    {/if}
+                  {:else}
+                    {#if h.type === '+'}
                     <div>
                       <span class='font-medium'>{h.user.username}</span> 이슈 생성됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
                     </div>
-                  {:else}
-                  <div>
+                    {:else}
                     <div>
-                      <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 업데이트됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
-                    </div> 
-                    <div class='flex items-center gap-1'>
-                      {#if h.field === 'assignee'}
-                      <div class=''>{h.old_value.username || "없음"}</div>
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                      </svg>
-                      <div class=''>{h.new_value.username || "없음"}</div>
-  
-                      {:else if h.field === 'body'}
-                      <div style='word-break: keep-all;'>{truncateString(stripTags(h.old_value), 200) || "없음"}</div>
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                      </svg>
-                      <div style='word-break: keep-all;'>{truncateString(stripTags(h.new_value), 200) || "없음"}</div>
-  
-                      {:else if h.field === 'status'}
-                      <div style='word-break: keep-all;'>{stripTags(issueStatus[h.old_value].label) || "없음"}</div>
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                      </svg>
-                      <div style='word-break: keep-all;'>{stripTags(issueStatus[h.new_value].label) || "없음"}</div>
-  
-                      {:else if h.field === 'title'}
-                      <div style='word-break: keep-all;'>{h.old_value || "없음"}</div>
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                      </svg>
-                      <div style='word-break: keep-all;'>{h.new_value || "없음"}</div>
-                      {/if}
+                      <div>
+                        <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 업데이트됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
+                      </div> 
+                      <div class='flex items-center gap-1'>
+                        {#if h.field === 'assignee'}
+                        <div class=''>{h.old_value.username || "없음"}</div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        <div class=''>{h.new_value.username || "없음"}</div>
+    
+                        {:else if h.field === 'body'}
+                        <div style='word-break: keep-all;'>{truncateString(stripTags(h.old_value), 200) || "없음"}</div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        <div style='word-break: keep-all;'>{truncateString(stripTags(h.new_value), 200) || "없음"}</div>
+    
+                        {:else if h.field === 'status'}
+                        <div style='word-break: keep-all;'>{stripTags(issueStatus[h.old_value].label) || "없음"}</div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        <div style='word-break: keep-all;'>{stripTags(issueStatus[h.new_value].label) || "없음"}</div>
+    
+                        {:else if h.field === 'title'}
+                        <div style='word-break: keep-all;'>{h.old_value || "없음"}</div>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                        <div style='word-break: keep-all;'>{h.new_value || "없음"}</div>
+                        {/if}
+                        
+                      </div>
                     </div>
-                  </div>
+                    {/if}
                   {/if}
                 </div>
                 {/each}
-                
+              
                 <div class="history-page-nav">
                   <PaginationNav
                     totalItems="{history.count}"
@@ -503,10 +545,8 @@ function stripTags(htmlStr){
       
       <div class='tag-section flex flex-col'>
         <span class="text-sm text-gray-600 w-14 mb-1 font-medium">태그</span>
-        <div class='flex flex-row flex-wrap gap-2'>
-          <span class='label-gray'>백엔드</span>
-          <span class='label-blue'>인증</span>
-          <span class='label-green'>리뷰 필요</span>
+        <div class="tag-container">
+          <Tags tags={issue.tags} on:tags={handleTags}/>
         </div>
       </div>
 
@@ -515,3 +555,18 @@ function stripTags(htmlStr){
   </div>
 </section>
 {/if}
+
+<style>
+.tag-container :global(.svelte-tags-input-tag) {
+  @apply label-gray;
+}
+     
+.tag-container :global(.svelte-tags-input-tag-remove){
+  margin-left: 6px;  
+  font-weight: 700;
+}
+
+.tag-container :global(.svelte-tags-input-layout) {
+  /* background:yellow; */
+}
+</style>
