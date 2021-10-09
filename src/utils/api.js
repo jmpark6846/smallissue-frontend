@@ -13,8 +13,7 @@ let refreshQueue = [];
 api.interceptors.response.use(response=>response, async error=> {
   const { response, config } = error
   const origianlRequest = config
-
-  if(response.status === 401 && response.statusText === 'Unauthorized'){    
+  if(response.status === 401){    
     if (!isTokenRefreshing) {
       isTokenRefreshing = true;
       
@@ -26,7 +25,6 @@ api.interceptors.response.use(response=>response, async error=> {
       .catch(err => {
         refreshQueue.forEach(p => p.reject(err));
         refreshQueue = [];
-        console.error(err);
       })
       .finally(()=>{
         isTokenRefreshing = false;
@@ -41,9 +39,6 @@ api.interceptors.response.use(response=>response, async error=> {
     });
     return retryOriginalRequest;
   }
-
-  // logout
-  user.set(null);
   return Promise.reject(error)  
 })
 

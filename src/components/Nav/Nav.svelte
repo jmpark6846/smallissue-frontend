@@ -7,6 +7,6 @@ if(tabpanels){
 }
 
 </script>
-<ul class='nav flex flex-row gap-2'>
+<ul class='nav flex flex-row gap-4'>
   <slot />
 </ul>

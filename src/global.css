@@ -1,8 +1,19 @@
 @layer base{
+
+  html, body, #svelte {
+    height: 100%;
+    @apply text-gray-700;
+    overflow: hidden;
+  }
+
+  body{
+    @apply bg-gray-50;
+  }
+  
   .max-w-8xl{
     max-width: 90rem;
   }
-
+  
   .min-h-10 {
     min-height: 2.5rem/* 40px */;
   }
@@ -52,7 +63,7 @@
   .label-green{
     @apply label bg-green-100 text-green-800;
   }
-  
+/*   
   .nav-item{
     @apply py-1 px-1 cursor-pointer;
     line-height: initial;
@@ -72,7 +83,7 @@
 
   .nav-item.active{
     @apply bg-gray-500 text-white hover:bg-gray-600 hover:text-gray-100; 
-  }
+  } */
 
   .dropdown:focus-within .dropdown-menu {
     opacity:1;

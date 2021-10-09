@@ -4,11 +4,7 @@ import Tags from "svelte-tags-input";
 import dayjs from 'dayjs'
 import DOMPurify from "dompurify";
 import { onMount } from "svelte";
-import { useParams, link } from "svelte-navigator";
-import Dropdown from "../../../components/Dropdown/Dropdown.svelte";
-import DropdownButton from "../../../components/Dropdown/DropdownButton.svelte";
-import DropdownItem from "../../../components/Dropdown/DropdownItem.svelte";
-import DropdownMenu from "../../../components/Dropdown/DropdownMenu.svelte";
+import { useParams, link, navigate } from "svelte-navigator";
 import Nav from "../../../components/Nav/Nav.svelte";
 import NavItem from "../../../components/Nav/NavItem.svelte";
 import TabPanel from "../../../components/Nav/TabPanel.svelte";
@@ -17,12 +13,17 @@ import TextareaEditable from "../../../components/TextareaEditable.svelte";
 import user from "../../../store/user";
 import api from "../../../utils/api";
 import truncateString from '../../../utils/truncateString';
+import Dropdown from '../../../components/Dropdown/Dropdown.svelte'
+import DropdownMenu from '../../../components/Dropdown/DropdownMenu.svelte'
 
-
+export let id=null;
+export let onIssueChange;
+export let onClose;
 const params = useParams();
-$: PROJECT_URL = `/projects/${$params.project_id}/`;
-$: ISSUE_DETAIL_URL = `/projects/${$params.project_id}/issues/${$params.issue_id}/`;
-$: issue = {};
+
+let issue = {};
+let PROJECT_URL=null;
+let ISSUE_DETAIL_URL=null;
 let editorEl;
 let loading = true;
 let commentLoading = true;
@@ -60,6 +61,25 @@ const issueStatus = [
   { label: "완료됨", btnClass: 'btn-green'}
 ];
 
+$:{
+  loading = true;
+  if(id){
+    PROJECT_URL = `/projects/${$params.id}/`;
+    ISSUE_DETAIL_URL = `/projects/${$params.id}/issues/${id}/`;
+
+    Promise.all([
+      api.get(ISSUE_DETAIL_URL),
+      api.get(ISSUE_DETAIL_URL+'comments/?comment_page_num=1')
+    ])
+    .then(res=>{
+      issue = res[0].data
+      comments = res[1].data
+      loading = false;
+      commentLoading = false;
+    }).catch(error => error) 
+  }
+}
+
 async function getIssue(){
   try {
     const res = await Promise.all([
@@ -84,8 +104,7 @@ async function getComments(page_num){
 }
 
 onMount(async() => {
-  await getIssue();
-  await getComments(1);
+  
 });
 
 async function handleTitleChange(e){
@@ -93,16 +112,15 @@ async function handleTitleChange(e){
   await updateIssue({ title: e.detail.value })
 }
 
-async function handleModalStatusChange(e){
-  let newStatus = Number(e.detail.index)
-  issue.status = newStatus
-  await updateIssue({ status: newStatus })
+async function handleModalStatusChange(index){
+  issue.status = index
+  await updateIssue({ status: index })
 }
 
 
 async function loadProjectUsers(){
   try {
-    const res = await api.get(`projects/${$params.project_id}/users`);
+    const res = await api.get(`projects/${$params.id}/users`);
     userList = res.data.users
   } catch (error) {
     console.error(error);
@@ -127,11 +145,11 @@ async function updateIssue(updated){
   try {
     const res = await api.put(ISSUE_DETAIL_URL, data);
     issue = res.data 
+    onIssueChange(issue, );
   } catch (error) {
     console.error(error);
   }
 }
-
 
 function tinymceloaded(elementId, content) {
   const ed = new tinymce.Editor(elementId, {
@@ -176,7 +194,9 @@ async function modalBodySave(){
 
 function modalBodyCancel(){
   const editor = window.tinymce.activeEditor;
-  editor.setContent(issue.body);
+  if(issue.body){
+    editor.setContent(issue.body);
+  }
   isModalBodyEditing = false;
   editor.destroy()
   if(!issue.body){
@@ -314,7 +334,26 @@ async function handleTags(event) {
     console.error(error);
   }
 }
+async function deleteIssue(){
+  if(confirm('이슈를 삭제하시겠습니까?')){
+    try {
+      await api.delete(ISSUE_DETAIL_URL);
+      navigate(PROJECT_URL);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
 
+async function toggleSubscription(){
+  try{
+    const res = await api.patch(ISSUE_DETAIL_URL+'toggle_subscription/')
+    issue.subscribers = res.data.subscribers
+  }catch{
+    console.error(error);
+  }
+
+}
 
 </script>
 
@@ -323,35 +362,110 @@ async function handleTags(event) {
 </svelte:head>
 
 {#if loading }
-<section class='pt-4 px-4 md:px-0 grid gap-4 grid-cols-1 md:grid-cols-12 '> 
-  
-  <div class='title-section col-start-1 row-start-1 md:col-span-12 '>
-    <div class='cp-text'></div>
-    <div class='cp-text-long'></div>
+<section class='py-2'> 
+  <div class="py-2">
+    <div class="px-4">
+      <div class='cp-text'></div>
+    </div>
+    
   </div>
-  <div class='main-section col-start-1 row-start-3 md:row-start-2 md:col-span-9 '>
-    <div class="cp-paragraph card mb-4"></div>
-    <div class="cp-paragraph card"></div>
+  <div class='title-section py-0'>
+    <div class="px-4 mb-4">
+      <div class='cp-text'></div>
+    </div>
   </div>
-  <div class='card info-section col-start-1 row-start-2 md:col-start-10 md:col-span-3 md:row-span-1 md:row-start-2'>
-    <div class="cp-paragraph"></div>
-    <div class="cp-paragraph"></div>
+  <div class='main-section py-2'>
+    <div class="px-4 mb-4">
+      <div class="cp-paragraph"></div>
+    </div>
+  </div>
+  <div class='info-section py-2'>
+    <div class="px-4 mb-4">
+      <div class="cp-paragraph"></div>
+      <div class="cp-paragraph"></div>
+    </div>
   </div>
 </section>
 {:else}
 
-<section class='pt-4 px-4 md:px-0 grid gap-4 grid-cols-1 md:grid-cols-12 '> 
-  <div class='title-section col-start-1 row-start-1 md:col-span-12 '>
-    <div class=' text-gray-500 mb-2'>
-      <a href={PROJECT_URL} class=' hover:text-gray-700 mr-2' use:link>{issue.project.name}</a> / <a href={ISSUE_DETAIL_URL} class='ml-2 hover:text-gray-700' use:link>{issue.key}</a> 
+<section class="py-2"> 
+  <div class="topbar-section py-2">
+    <div class='px-4 flex justify-between items-center'>
+      <div class='text-gray-500'>{issue.key}</div>
+      <div>
+        <div class='subscribe-btn rounded-lg cursor-pointer inline-block hover:bg-gray-100 px-2 py-2' on:click={toggleSubscription}>
+          {#if issue.subscribers.includes($user.pk)}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+            <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" />
+          </svg>
+          {:else}
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+          {/if}
+        </div>
+        <div class='subscribe-btn rounded-lg cursor-pointer inline-block hover:bg-gray-100 px-2 py-2' on:click={onClose}>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        
+      </div>
+      
     </div>
-    <h1 class='text-3xl font-semibold -ml-1'>
-      <TextareaEditable content={issue.title} on:change={handleTitleChange}/>
-    </h1>
+  </div>
+  <div class='title-section py-0'>
+    <div class="px-4">
+      <h1 class='text-2xl font-semibold -ml-1'>
+        <TextareaEditable content={issue.title} on:change={handleTitleChange}/>
+      </h1>
+    </div>
   </div>
 
-  <div class='main-section  col-start-1 row-start-3 md:row-start-2 md:col-span-9 '>
-      <div class='body-section mb-4 card'>
+  <div class='info-section py-2'>
+    <div class='px-4 flex space-x-4'>
+      <div class="status-section w-1/3">
+        <div class="font-medium text-gray-800 mb-1">상태</div>
+        <Dropdown>
+          <div class={`flex items-center rounded-lg px-4 py-2 cursor-pointer ${issueStatus[issue.status].btnClass}`}>
+            <span>{issueStatus[issue.status].label}</span>
+            <span>
+              <svg class="w-5 h-5 ml-2 -mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+            </span>
+          </div>
+        </Dropdown>
+        <DropdownMenu>
+          {#each issueStatus as status, index (index)}
+            <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleModalStatusChange(index)}>{status.label}</div>
+          {/each}
+        </DropdownMenu>
+      </div>
+      <div class="assignee-section w-1/3">
+        <div class="font-medium text-gray-800 mb-1">담당자</div>
+        <div>
+          <Dropdown on:click={loadProjectUsers}>
+            <div class="flex items-center rounded-lg px-4 py-2 bg-gray-100 hover:bg-gray-200 focus:bg-gray-300 cursor-pointer">
+              <span>{issue.assignee ? issue.assignee.username : "없음"}</span>
+              <span>
+                <svg class="w-5 h-5 ml-2 -mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+              </span>
+            </div>
+          </Dropdown>
+          <DropdownMenu>
+            <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleAssigneeChange(null)}>할당 해제</div>
+            {#each userList as user, index (index)}
+              <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleAssigneeChange(index)}>{user.username}</div>
+            {/each}
+          </DropdownMenu>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class='main-section py-2'>
+      <div class='body-section px-4 py-2'>
         <div class="font-medium text-gray-800">설명</div>
         <div id="editor" bind:this={editorEl} class='p-1 hover:bg-gray-100 cursor-pointer rounded-md overflow -ml-1' on:click={modalBodyClick}>
           {@html issue.body ? DOMPurify.sanitize(issue.body) : `<div class='text-gray-500'>${placeholder}</div>`}
@@ -365,12 +479,18 @@ async function handleTags(event) {
         {/if}      
       </div>
       
-      <div class="tab-section  card ">
+      <div class='tag-section px-4 py-2'>
+        <div class="text-gray-800 mb-1 font-medium">태그</div>
+        <div class="tag-container">
+          <Tags tags={issue.tags} on:tags={handleTags}/>
+        </div>
+      </div>
+      <div class="tab-section px-4 py-2">
         <div class="font-medium text-gray-800 mb-2">활동</div>
 
         <Nav tabpanels="tabpanels">
-          <NavItem target="panel-1" active on:click={async()=>await getComments(1)}><span class="text-sm">댓글</span></NavItem>
-          <NavItem target="panel-2" on:click={async()=>await getHistory(1)}><span class="text-sm">히스토리</span></NavItem>
+          <NavItem target="panel-1" active on:click={async()=>await getComments(1)}><span class="text-sm cursor-pointer">댓글</span></NavItem>
+          <NavItem target="panel-2" on:click={async()=>await getHistory(1)}><span class="text-sm cursor-pointer">히스토리</span></NavItem>
         </Nav>
         <div class="mt-2">
           <TabPanels id="tabpanels">
@@ -430,7 +550,7 @@ async function handleTags(event) {
                         <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 추가됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
                       </div> 
                       <div class='flex items-center gap-1'>
-                        <div style='label-gray word-break: keep-all;'>{h.new_value}</div>
+                        <div class='label-gray'style='word-break: keep-all;'>{h.new_value}</div>
                       </div>
                     </div>
                     {:else if h.type === "-"}
@@ -439,7 +559,7 @@ async function handleTags(event) {
                         <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 삭제됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
                       </div> 
                       <div class='flex items-center gap-1'>
-                        <div style='label-gray word-break: keep-all;'>{h.new_value}</div>
+                        <div class='label-gray' style='word-break: keep-all;'>{h.new_value}</div>
                       </div>
                     </div>
                     {/if}
@@ -509,56 +629,12 @@ async function handleTags(event) {
     
   </div>
 
-  <div class='info-section col-start-1 row-start-2 md:col-start-10 md:col-span-3 md:row-span-1 md:row-start-2'>
-    <div class='card flex flex-col gap-4'>
-      <div class='font-medium text-gray-800'>세부사항</div>
-      <div class="status-section">
-        <div class="text-sm text-gray-600 w-14 mb-1 font-medium">상태</div>
-        <Dropdown z={50}>
-          <DropdownButton style={issueStatus[issue.status].btnClass}>
-            {issueStatus[issue.status].label}
-            <svg class="w-5 h-5 ml-2 -mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-          </DropdownButton>
-          <DropdownMenu>
-            {#each issueStatus as status, index (index)}
-              <DropdownItem on:click={handleModalStatusChange} >{status.label}</DropdownItem>
-            {/each}
-          </DropdownMenu>
-        </Dropdown>
-      </div>
-      <div class="assignee-section">
-        <div class="text-sm text-gray-600 w-14 mb-1 font-medium">담당자</div>
-          <Dropdown z={40}>
-            <DropdownButton 
-              on:click={loadProjectUsers}>
-              {issue.assignee ? issue.assignee.username : "없음"}
-              <svg class="w-5 h-5 ml-2 -mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-            </DropdownButton>
-            <DropdownMenu>
-              <DropdownItem on:click={()=>handleAssigneeChange(null)}>할당 해제</DropdownItem>
-              {#each userList as user, index (index)}
-                <DropdownItem on:click={()=>handleAssigneeChange(index)}>{user.username}</DropdownItem>
-              {/each}
-            </DropdownMenu>
-          </Dropdown>
-      </div>
-      
-      <div class='tag-section flex flex-col'>
-        <span class="text-sm text-gray-600 w-14 mb-1 font-medium">태그</span>
-        <div class="tag-container">
-          <Tags tags={issue.tags} on:tags={handleTags}/>
-        </div>
-      </div>
-
-  </div>
-    
-  </div>
 </section>
 {/if}
 
 <style>
 .tag-container :global(.svelte-tags-input-tag) {
-  @apply label-gray;
+  /* @apply label-gray; */
 }
      
 .tag-container :global(.svelte-tags-input-tag-remove){

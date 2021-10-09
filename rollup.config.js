@@ -8,6 +8,7 @@ import sveltePreprocess from "svelte-preprocess";
 import alias from '@rollup/plugin-alias';
 import dotenv from 'dotenv';
 import json from '@rollup/plugin-json';
+import replace from '@rollup/plugin-replace';
 
 dotenv.config()
 const production = !process.env.ROLLUP_WATCH;
@@ -36,9 +37,9 @@ function serve() {
 const aliases = alias({
   
   entries: [
-    { find: '$components', replacement: 'src/components' },
-    { find: '$utils', replacement: 'src/utils' },
-    { find: '$routes', replacement: 'src/routes' },
+    { find: '$components', replacement: './src/components' },
+    { find: '$utils', replacement: './src/utils' },
+    { find: '$routes', replacement: './src/routes' },
   ]
 });
 
@@ -52,6 +53,7 @@ export default {
 	},
 	plugins: [
 		aliases,
+		replace({ 'process.env.NODE_ENV': JSON.stringify( 'production' ) }),
 		svelte({
 			compilerOptions: {
 				// enable run-time checks when not in production
@@ -60,7 +62,9 @@ export default {
 			preprocess: sveltePreprocess({
         sourceMap: !production,
         postcss: true,
-				replace:[['BASE_URL', JSON.stringify(process.env.BASE_URL)],]
+				replace:[
+					['BASE_URL', JSON.stringify(process.env.BASE_URL)],
+				]
       }),
 		}),
 		// we'll extract any component CSS out into

@@ -1,81 +1,59 @@
 <script>
-import EditorJS from '@editorjs/editorjs';
-import List from '@editorjs/list'; 
-import debounce from 'lodash/debounce'
-
-import { onMount } from 'svelte';
-import Editor from '../components/Editor.svelte';
-
+import  { createPopper } from '@popperjs/core'
 import Dropdown from '../components/Dropdown/Dropdown.svelte';
-import DropdownButton from '../components/Dropdown/DropdownButton.svelte';
-import DropdownItem from '../components/Dropdown/DropdownItem.svelte';
 import DropdownMenu from '../components/Dropdown/DropdownMenu.svelte';
-  
-let styles = ['btn label', 'btn-blue label', 'btn-green label'];
-function handleButtonClick(e){
-  console.log('button!')
+const popperOptions = {
+  placement: 'bottom-start',
+  modifiers: [
+    { name: 'offset', options: { offset: [0, 10] } }
+  ],
+};
+
+export let dropdownToggleSelector
+
+let dropdownToggleEl;
+let dropdownMenuEl;
+
+
+
+function handleDropdownToggleClick(e){
+  createPopper(dropdownToggleEl, dropdownMenuEl, {
+      placement: 'bottom-start',
+      modifiers: [
+          {
+              name: 'offset',
+              options: {
+                  offset: [0, 10],
+              },
+          },
+      ]
+  });
+  dropdownMenuEl.classList.toggle("hidden");
+  dropdownMenuEl.classList.toggle("block");
+
+  document.body.addEventListener('click', handleDropdownOutsideClick, true);
 }
 
-function handleClick(e){
-  console.log(e.detail.index)
-}
-
-let editor;
-let content="<h1>helllooooo~!</h1>"
-function tinymceloaded() {
-    window.tinymce.init({
-    selector: 'div#editor',
-    menubar: false,
-    statusbar: false,
-    setup: function(editor) {
-      editor.on('init', function(e) {
-        console.log('The Editor has initialized.');
-      });
-      editor.on('input', debounce(function(e){
-        const content = editor.getContent()
-        console.log(content)
-      }, 300));
-      editor.on('blur', function(e){
-        console.log('blurrred!')
-      })
+function handleDropdownOutsideClick(event) {
+    var targetElement = event.target; // clicked element
+    console.log(targetElement)
+    console.log(targetElement !== dropdownMenuEl, targetElement !== dropdownToggleEl, !dropdownToggleEl.contains(targetElement), targetElement !== dropdownMenuEl && targetElement !== dropdownToggleEl && !dropdownToggleEl.contains(targetElement))
+    if (targetElement !== dropdownMenuEl && targetElement !== dropdownToggleEl && !dropdownToggleEl.contains(targetElement)) {
+        dropdownMenuEl.classList.add("hidden");
+        dropdownMenuEl.classList.remove("block");
+        document.body.removeEventListener('click', handleDropdownOutsideClick, true);
     }
-  })
 }
 </script>
-<svelte:head>
-  <script src="https://cdn.tiny.cloud/1/hc0aj9chontfnpqrhoue1ms95l96pb9tcm1uroo8447dr9ek/tinymce/5/tinymce.min.js" referrerpolicy="origin" on:load={tinymceloaded}></script>
-</svelte:head>
-<!-- 
-<Dropdown>
-  <DropdownButton on:click={handleButtonClick} style={styles[1]}>
-    drop
-    <svg class="w-5 h-5 ml-2 -mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-  </DropdownButton>
-  <DropdownMenu>
-    <DropdownItem on:click={handleClick}>hi</DropdownItem>
-    <DropdownItem on:click={handleClick}>hi</DropdownItem>
-    <DropdownItem on:click={handleClick}>hi</DropdownItem>
-  </DropdownMenu>
+
+<Dropdown menu={'dropdown'}>
+  <button class='rounded-lg px-4 py-2 bg-blue-100 hover:bg-blue-200 focus:bg-blue-300 text-blue-500 hover:text-blue-700'>누르기</button>
 </Dropdown>
-  
-
-<div >tinymce</div>
-<div id="editor">
-  {@html content}
-</div> -->
-
-
-
-<div class='grid grid-cols-1 md:grid-cols-12 h-80'>
-  <div class='section-a col-start-1 row-start-1 md:col-span-12  bg-blue-100'></div>
-  <div class='section-b col-start-1 row-start-3 md:row-start-2 md:col-span-9 bg-red-100'></div>
-  <div class='section-c col-start-1 row-start-2 md:col-start-10 md:col-span-3 md:row-span-1 md:row-start-2 bg-green-100'></div>
-</div>
-
-
-<Editor>
-  <div class="flex flex-row mt-2 gap-2">
-    <button class='btn-primary' on:click={save}>저장</button>
-    <button class='btn-outline' on:click={cancel}>취소</button>
+<DropdownMenu id='dropdown'>
+  <div class='card'>
+    <div class='px-4 py-2  hover:bg-blue-200'>메뉴1</div>
+    <div class='px-4 py-2  hover:bg-blue-200'>메뉴1</div>
+    <div class='px-4 py-2  hover:bg-blue-200'>메뉴1</div>
+    
   </div>
-</Editor>
+</DropdownMenu>

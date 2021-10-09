@@ -1,9 +1,9 @@
 <script>
+import { link } from 'svelte-navigator'
 import { createEventDispatcher, getContext } from 'svelte';
 export let target;
 export let active = false;
 export let href;
-export let style = 'tabs';
 
 let item;
 const tabpanelsId = getContext('tabpanels');
@@ -39,10 +39,16 @@ function handleClick(){
 }
 
 </script>
-<li class={`nav-item ${style}`} target={target}  class:active={active} bind:this={item} on:click={handleClick}>
+<li class='nav-item ' target={target}  class:active={active} bind:this={item} on:click={handleClick}>
   {#if href }
-    <a class='nav-link' href='#'><slot /></a>
+    <a class='nav-link' use:link {href}><slot /></a>
   {:else}
     <slot/>
   {/if}
 </li>
+
+<style>
+  .nav-item.active{
+    font-weight: 700;
+  }
+</style>

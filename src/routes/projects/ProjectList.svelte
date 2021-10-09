@@ -10,6 +10,7 @@ import ModalFooter from '../../components/Modal/ModalFooter.svelte';
 import { onMount } from 'svelte';
 import user from '../../store/user';
 import api from '../../utils/api';
+import { project } from '../../store';
 
 const navigate = useNavigate()
 let modal;
@@ -26,30 +27,32 @@ $: projects = [];
 let projectListEl;
 let projectSortable;
 
-$:{
-  if(projectListEl){
-    projectSortable = Sortable.create(projectListEl, {
-      animation: 150,
-      ghostClass: 'blue-background-class',
-      onEnd: async function(e){
-        try {
-          let new_orders = projectSortable.toArray()
-          await api.patch(`/projects/set_orders/`, {new_orders});
-        } catch (error) {
-          console.error(error)
-        }
-      }
-    });
-  }
-}
+// $:{
+//   if(projectListEl){
+//     projectSortable = Sortable.create(projectListEl, {
+//       animation: 150,
+//       ghostClass: 'blue-background-class',
+//       onEnd: async function(e){
+//         try {
+//           let new_orders = projectSortable.toArray()
+//           await api.patch(`/projects/set_orders/`, {new_orders});
+//         } catch (error) {
+//           console.error(error)
+//         }
+//       }
+//     });
+//   }
+// }
 
 function toggle(e){
   open = !open
 }
 
 
-function handlClickProject(id){
-  navigate(`/projects/${id}`, { replace: true });
+function handlClickProject(id, index){
+  project.set({ ...projects[index] })
+  console.log(projects[index])
+  navigate(`/projects/${id}/issues`, { replace: true });
 }
 
 onMount(async ()=>{
@@ -114,10 +117,10 @@ async function submit(){
   <title>프로젝트</title>
 </svelte:head>
 
-<section class='px-4 md:px-0 py-5'>
-  <div class="flex flex-row justify-between  mb-5">
-    <h1 class='text-3xl font-semibold'>프로젝트</h1>
-    <button class="btn-primary flex items-center" on:click={toggle}>만들기</button>
+<section class='px-4 lg:px-8'>
+  <div class="flex flex-row justify-end  mb-5">
+    
+    <button class="btn-outline flex items-center" on:click={toggle}>만들기</button>
   </div>
 
   <Modal modal={modal} open={open} toggle={toggle} wide>
@@ -151,16 +154,17 @@ async function submit(){
     <div class='card hover:shadow-md cursor-pointer' class:cp-paragraph={loading}></div>
   </div>
   {:else}
-  <div bind:this={projectListEl} class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-    {#each projects as project,index (project.id)}
-    <div data-id={project.id} class='card hover:shadow-md cursor-pointer' on:click={()=>handlClickProject(project.id)}>
-      <div class='flex flex-row justify-between items-center mb-2'>
-        <span class="font-medium">
-          {project.name}
-        </span> 
-        <span class=' text-gray-800 text-sm'>
+  <div bind:this={projectListEl} class="space-y-2">
+    {#each projects as project, index (project.id)}
+    <div data-id={project.id} class='cursor-pointer px-4 py-4 rounded-lg bg-white hover:bg-gray-100 ' on:click={()=>handlClickProject(project.id, index)}>
+      <div class='flex flex-row  items-center'>
+        <span class=' w-20 mr-2'>
           {project.key}
         </span>
+        <span class=" font-semibold">
+          {project.name}
+        </span> 
+        
       </div>
       <!-- <div class='flex flex-none -space-x-2'>
         {#each project.users as user}
