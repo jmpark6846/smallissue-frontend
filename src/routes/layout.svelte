@@ -82,7 +82,7 @@ function toggleSidebar(){
                 </span>
                 
                 <span class='font-semibold'>
-                  팀원
+                  사용자
                 </span>
               </div>
             </a>

@@ -265,3 +265,13 @@ function updateCurrentIssue(currentIssue){
   </div>
 </section>
 {/if}
+
+<style>
+#issue-list::-webkit-scrollbar {    
+  display: none;
+}
+#issue-list{
+  -ms-overflow-style: none;
+  scrollbar-width: none;  
+}
+</style>

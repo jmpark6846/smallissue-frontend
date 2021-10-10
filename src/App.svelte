@@ -45,7 +45,7 @@ api.defaults.baseURL = BASE_URL
 	</PrivateRoute>
 	<PrivateRoute path="projects/:id/users/" let:location>
 		<Layout>
-			<h1 slot='header'>팀원</h1>     
+			<h1 slot='header'>사용자</h1>     
 			<UserList slot="body"/>
 		</Layout>
 	</PrivateRoute>
