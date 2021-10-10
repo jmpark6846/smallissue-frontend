@@ -112,7 +112,7 @@ function toggleSidebar(){
     
     </aside>
 
-    <main id='content-wrapper' class='flex-auto flex flex-col pt-0 lg:pt-4 h-full'>
+    <main id='content-wrapper' class='flex-auto flex flex-col pb-4 lg:py-4 h-full overflow-y-auto'>
       <Header>
         <slot name='header'>타이틀 없음</slot>
       </Header>
