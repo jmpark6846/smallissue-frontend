@@ -206,7 +206,7 @@ function updateCurrentIssue(currentIssue){
 
             <div class='flex justify-between items-center'>
               <span class='text-gray-500 lg:hidden block text-sm mr-4'>{issue.key}</span>
-              <div class='gap-3 flex flex-row text-gray-800' on:click={(e)=>{ e.stopPropagation()}}>
+              <div class='gap-3 flex flex-row text-gray-800' on:click={(e)=>{ e.stopPropagation() }}>
                 <Dropdown on:click={loadProjectUsers}>
                   <div class="flex items-center rounded-lg px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 focus:bg-gray-300 cursor-pointer">
                     <span>{issue.assignee ? issue.assignee.username : "없음"}</span>

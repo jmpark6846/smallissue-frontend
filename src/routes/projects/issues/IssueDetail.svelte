@@ -69,7 +69,7 @@ $:{
 
     Promise.all([
       api.get(ISSUE_DETAIL_URL),
-      api.get(ISSUE_DETAIL_URL+'comments/?comment_page_num=1')
+      api.get(ISSUE_DETAIL_URL+'comments/?page_num=1')
     ])
     .then(res=>{
       issue = res[0].data
@@ -95,7 +95,7 @@ async function getIssue(){
 async function getComments(page_num){
   commentLoading = true;
   try{
-    const res = await api.get(ISSUE_DETAIL_URL+'comments/?comment_page_num='+page_num);
+    const res = await api.get(ISSUE_DETAIL_URL+'comments/?page_num='+page_num);
     comments = res.data
     commentLoading = false;
   }catch(error){
@@ -525,7 +525,7 @@ async function toggleSubscription(){
                   {/if}
                 </div>
                 {/each}
-                <div class="history-page-nav">
+                <div class="page-nav">
                   <PaginationNav
                     totalItems="{comments.count}"
                     pageSize="{comments.page_size}"

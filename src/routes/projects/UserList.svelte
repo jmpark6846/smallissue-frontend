@@ -2,20 +2,19 @@
 import { navigate, useParams } from "svelte-navigator";
 import { onMount } from "svelte";
 import api from "../../utils/api";
-import { project } from "../../store";
+import { project, user } from "../../store";
 import Modal from "../../components/Modal/Modal.svelte";
 import ModalTitle from "../../components/Modal/ModalTitle.svelte";
 import ModalBody from "../../components/Modal/ModalBody.svelte";
 import ModalFooter from "../../components/Modal/ModalFooter.svelte";
 import dayjs from "dayjs";
-import debounce from "lodash/debounce";
-import Dropdown from "../../components/Dropdown/Dropdown.svelte";
-import DropdownMenu from "../../components/Dropdown/DropdownMenu.svelte";
 import Select from 'svelte-select';
+import PaginationNav from "svelte-paginate/src/PaginationNav.svelte";
+import truncateString from "../../utils/truncateString";
 
 const params = useParams();
-let users = [];
-let teams = [];
+let participations = { list: [], count: null, page_size: null, current_page: null };
+let teams = { list: [], count: null, page_size: null, current_page: null };
 let loading = true;
 let modalOpen = false;
 let modalEl;
@@ -26,25 +25,49 @@ let teamModalEl;
 let newTeam = "";
 let newTeamErrorMessage="";
 
+let selectedTeam = {};
+let addTeammateModalOpen = false;
+let newTeammate = null;
+
 function getProject(){
   return api.get(`projects/${$params.id}/`);
 }
 
-function getProjectUsers(){
-  return api.get(`projects/${$params.id}/users/`);
+async function getParticipations(page_num){
+  try {
+    const res = await api.get(`projects/${$params.id}/participations/${ page_num ? `?page_num=${page_num}` : "" }`);
+    participations = res.data
+  } catch (error) {
+    console.error(error);
+  }
+}
+function includeParticipationFilter(users){
+  return users.filter(user => {
+    for(const p of participations.list){
+      if(p.user.id === user.id){
+        return true;
+      }
+    }
+    return false;
+  })
 }
 
-const searchUser = async(filterText) => {
-  try {
-    const res = await api.get(`accounts/search/?email=${filterText}`);
-    return res.data.filter(user => {
-      for(const teamUser of users){
-        if(teamUser.id === user.id){
-          return false;
-        }
+function excludeParticipationFilter(users){
+  return users.filter(user => {
+    for(const p of participations.list){
+      if(p.user.id === user.id){
+        return false;
       }
-      return true;
-    })
+    }
+    return true;
+  })
+}
+
+const searchUser = async(filterText, filter, team) => {
+  try {
+    const res = await api.get(`accounts/search/`, { params: { email: filterText, project: $params.id, filter, team }});
+    return res.data
+
   } catch (error) {
     console.error(error);
   } 
@@ -53,12 +76,21 @@ const searchUser = async(filterText) => {
 async function handleDeleteUser(id){
   if (confirm('사용자를 삭제하시겠습니까?')){
     try {
-      const deleted_user = users.filter(user => user.id === id)[0]
-      await api.delete(`projects/${$params.id}/participations/${deleted_user.participation.id}/`);
-      users = users.filter(user => user.id !== id);
+      const participation = participations.list.find(p => p.user.id === id)
+      await api.delete(`projects/${$params.id}/participations/${participation.user.id}/`);
+      participations.list = participations.list.filter(p => p.user.id !== id);
     } catch (error) {
       console.error(error);
     }
+  }
+}
+
+async function getTeams(page_num){
+  try {
+    const res = await api.get(`projects/${$params.id}/teams/${ page_num ? `?page_num=${page_num}` : "" }`);
+    teams = res.data
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -66,12 +98,11 @@ onMount(async () => {
   try {
     const res = await Promise.all([
       getProject(), 
-      getProjectUsers(),
-      api.get(`projects/${$params.id}/teams/`)
     ]);
+    await getParticipations(),
+    await getTeams()
     project.set(res[0].data)
-    users = res[1].data.users
-    teams = res[2].data
+
     loading=false;
   } catch (error) {
     console.error(error);
@@ -108,7 +139,7 @@ function toggleTeamModal(){
 async function submit(){
   try {
     const res = await api.post(`projects/${$params.id}/participations/`, { user: newUser.id })
-    users = [ ...users, res.data]
+    participations.list = [ ...participations.list, res.data]
     toggle()
   } catch (error) {
     console.error(error);
@@ -118,7 +149,7 @@ async function submit(){
 async function submitTeam(){
   try {
     const res = await api.post(`projects/${$params.id}/teams/`, { project: $params.id, name: newTeam })
-    teams = [ ...teams, res.data]
+    teams.list = [ ...teams.list, res.data]
     toggleTeamModal()
   } catch (error) {
     if(error.response.status === 400){
@@ -133,7 +164,57 @@ async function handleDeleteTeam(id){
   if (confirm('팀을 삭제하시겠습니까?')){
     try {
       const res = await api.delete(`projects/${$params.id}/teams/${id}/`);
-      teams = teams.filter(team=> team.id !== id);
+      teams.list = teams.list.filter(team=> team.id !== id);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+function clickTeam(id){
+  selectedTeam = teams.list.find(team => team.id === id)
+  toggleAddTeammateModal()
+}
+
+function selectAddTeammate(e){
+  newTeammate = e.detail
+}
+
+async function submitAddTeammate() {
+  if(newTeammate.id){
+    try {
+      const res = await api.post(`projects/${$params.id}/teams/${selectedTeam.id}/users/`, { user: newTeammate.id })
+      selectedTeam.users = res.data
+      teams.list.forEach(team=>{
+        if(team.id === selectedTeam.id){
+          team.users = res.data
+        }
+      })
+      teams.list =  [ ...teams.list ]
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+function toggleAddTeammateModal(){
+  addTeammateModalOpen = !addTeammateModalOpen
+  if(!addTeammateModalOpen){
+    newTeammate = null;
+  }
+}
+
+async function deleteTeammate(id){
+  if (confirm('팀원을 팀에서 삭제하시겠습니까?')){
+    try {
+      await api.delete(`projects/${$params.id}/teams/${selectedTeam.id}/users/${id}/`);
+      selectedTeam.users = selectedTeam.users.filter(user => user.id !== id);
+      teams.list.forEach(team=>{
+        if(team.id === selectedTeam.id){
+          team.users = selectedTeam.users
+        }
+      })
+      teams.list =  [ ...teams.list ]
     } catch (error) {
       console.error(error);
     }
@@ -143,7 +224,7 @@ async function handleDeleteTeam(id){
 
 <section class='px-4 lg:px-8'>
   <div class="flex flex-row justify-end  mb-5">
-    <button class="btn-outline flex items-center" on:click={toggle}>만들기</button>
+    <button class="btn-outline flex items-center" on:click={toggle}>사용자 추가하기</button>
   </div>
 
   <Modal modal={modalEl} open={modalOpen} toggle={toggle}>
@@ -152,7 +233,7 @@ async function handleDeleteTeam(id){
       <div class="">
         <div class="">
           <div class="text-gray-500">이메일</div>
-          <Select value={newUser} placeholder="추가하려는 사용자의 이메일을 입력하세요." noOptionsMessage="사용자가 존재하지 않습니다." optionIdentifider="id" {getSelectionLabel} {getOptionLabel} loadOptions={searchUser} on:select={handleSelect}></Select>
+          <Select value={newUser} placeholder="추가하려는 사용자의 이메일을 입력하세요." noOptionsMessage="사용자가 존재하지 않습니다." optionIdentifider="id" {getSelectionLabel} {getOptionLabel} loadOptions={(text)=>searchUser(text, 'exclude')} on:select={handleSelect}></Select>
         </div>
       </div>
     </ModalBody>
@@ -183,43 +264,58 @@ async function handleDeleteTeam(id){
       </tr>
     </thead>
     <tbody>
-      {#each users as teammate, index (index)}
+      {#each participations.list as p, index (index)}
       <tr class='px-4 py-2 hover:bg-gray-100'>
           <td class="font-semibold">
-            {teammate.username}
+            {p.user.username}
           </td> 
           <td class="">
-            {teammate.email}
+            {p.user.email}
           </td> 
           <td class=' text-center'>
-            {teammate.team.name || ""}
+            {p.team.name || ""}
           </td>
           <td class='text-center'>
-            {teammate.participation.job_title || ""}
+            {p.job_title || ""}
           </td>
           <td class='text-center'>
-            {dayjs(teammate.participation.date_joined).format('YYYY.MM.DD')}
+            {dayjs(p.date_joined).format('YYYY.MM.DD')}
           </td>
           <td class='text-center'>
-            {#if teammate.id === $project.leader.id}
+            {#if p.user.id === $project.leader.id}
               리더
             {/if}
           </td> 
           <td class='flex justify-center'>
-            <div class='text-center cursor-pointer' on:click={()=>handleDeleteUser(teammate.id)} >
+            {#if $user.pk === $project.leader.id}
+            <div class='text-center cursor-pointer' on:click={()=>handleDeleteUser(p.user.id)} >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </div>
+            {/if}
           </td> 
       </tr>
       {/each}
     </tbody>
   </table>
+  {#if teams.count > teams.page_size}
+  <div class="page-nav mt-4 mb-16 ">
+    <PaginationNav
+      totalItems="{participations.count}"
+      pageSize="{participations.page_size}"
+      currentPage="{participations.current_page}"
+      limit="{2}"
+      showStepOptions="{false}"
+      on:setPage="{async (e) => await getParticipations(e.detail.page)}"
+    />
+  </div>
+  {/if}
+  
   
   <div class="flex justify-between items-center mb-4">
     <h2 class='text-xl font-semibold'>팀</h2>
-    <button class="btn-outline flex items-center" on:click={toggleTeamModal}>추가하기</button>
+    <button class="btn-outline flex items-center" on:click={toggleTeamModal}>팀 추가하기</button>
   </div>
   <Modal modal={teamModalEl} open={teamModalOpen} toggle={toggleTeamModal}>
     <ModalTitle>팀 추가하기</ModalTitle>
@@ -238,31 +334,81 @@ async function handleDeleteTeam(id){
     </ModalFooter>
   </Modal>
   <div class="space-y-2">
-    {#if teams.length === 0 }
+    {#if teams.list.length === 0 }
     <div class='cursor-pointer px-4 py-4 rounded-lg bg-white hover:bg-gray-100'>
       <div class='text-gray-500'>
         없음
       </div>
     </div>
     {:else}
-      {#each teams as team, index (index)}
-      <div class='cursor-pointer px-4 py-4 rounded-lg bg-white hover:bg-gray-100'>
+      {#each teams.list as team, index (index)}
+      <div class='cursor-pointer px-4 py-4 rounded-lg bg-white hover:bg-gray-100' on:click={()=>clickTeam(team.id)}>
         <div class='flex flex-row  items-center'>
           <span class="font-semibold w-40 max-w-40">
             {team.name}
           </span> 
           <span class='w-40'>
-            사용자 목록
+            {#each team.users as user, index (index)}
+              {user.username}
+            {/each}
+
           </span>
-          <span on:click={async()=>await handleDeleteTeam(team.id)}>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </span> 
         </div>
       </div>
       {/each}
+      {#if teams.count > teams.page_size}
+      <div class="page-nav mt-4 mb-16 ">
+        <PaginationNav
+          totalItems="{teams.count}"
+          pageSize="{teams.page_size}"
+          currentPage="{teams.current_page}"
+          limit="{2}"
+          showStepOptions="{false}"
+          on:setPage="{async (e) => await getTeams(e.detail.page)}"
+        />
+      </div>
+      {/if}
     {/if}
+    
+    <Modal open={addTeammateModalOpen} toggle={toggleAddTeammateModal}>
+      <ModalTitle>{selectedTeam.name} 팀</ModalTitle>
+      <ModalBody>
+        <div class="">
+          <div class="mb-4">
+            <div class="text-gray-500">팀원 추가하기</div>
+            <Select value={newTeammate} placeholder={`${selectedTeam.name}에 추가하려는 사용자의 이메일을 입력하세요.`} noOptionsMessage="사용자가 존재하지 않습니다." optionIdentifider="id" {getSelectionLabel} {getOptionLabel} loadOptions={(text)=>searchUser(text,'include', '-'+selectedTeam.id)} on:select={selectAddTeammate}></Select>
+          </div>
+          {#if selectedTeam.users }
+            {#each selectedTeam.users as user, index (index)}
+            <div class='cursor-pointer px-4 py-2 rounded-lg bg-white hover:bg-gray-100'>
+              <div class='flex flex-row justify-between items-center'>
+                <span class="font-semibold mr-4">
+                  {user.username}
+                </span> 
+                <span class='w-40'>
+                  {user.email}
+                </span>
+                <span on:click={async ()=>await deleteTeammate(user.id)}>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+            {/each}
+          {/if}
+        </div>
+      </ModalBody>
+      <ModalFooter>
+        <div class="flex justify-between items-center">
+          <button class='rounded-lg px-4 py-2 text-sm bg-red-100 hover:bg-red-200 focus:bg-red-300 text-red-700' on:click={async()=>await handleDeleteTeam(selectedTeam.id)}>팀 삭제</button> 
+          <div>
+            <button class="btn"  on:click={toggleAddTeammateModal}>취소</button>
+            <button class="btn-primary modal-close" on:click={submitAddTeammate}>추가</button>
+          </div>
+        </div>
+      </ModalFooter>
+    </Modal>
   </div>
   {/if}
 </section>

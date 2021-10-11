@@ -53,7 +53,7 @@ async function updateProject(){
 function cancelUpdate(){
   console.log($project)
   projectData = $project
-}
+} 
 </script>
 {#if loading }
 <section class='container mx-auto flex-auto px-4 md:px-0 py-5 h-full'>
