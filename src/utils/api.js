@@ -1,4 +1,5 @@
 import axios from "axios";
+import { navigate } from "svelte-navigator";
 import user from '../store/user';
 
 const api = axios.create({
@@ -13,6 +14,11 @@ let refreshQueue = [];
 api.interceptors.response.use(response=>response, async error=> {
   const { response, config } = error
   const origianlRequest = config
+
+  // if(response.status === 500){
+  //   navigate('/not_found', { replace: true})
+  // }
+  
   if(response.status === 401){    
     if (!isTokenRefreshing) {
       isTokenRefreshing = true;

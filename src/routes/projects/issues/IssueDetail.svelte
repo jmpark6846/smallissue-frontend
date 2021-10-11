@@ -15,10 +15,12 @@ import api from "../../../utils/api";
 import truncateString from '../../../utils/truncateString';
 import Dropdown from '../../../components/Dropdown/Dropdown.svelte'
 import DropdownMenu from '../../../components/Dropdown/DropdownMenu.svelte'
+import { issueStatus } from '../../../utils/common';
 
 export let id=null;
 export let onIssueChange;
 export let onClose;
+export let onDelete;
 const params = useParams();
 
 let issue = {};
@@ -55,11 +57,6 @@ const issueAttrNames = {
   status: '상태',
   tags:'태그'
 }
-const issueStatus = [
-  { label: "해야 할 일", btnClass: 'btn'}, 
-  { label: "진행 중", btnClass: 'btn-blue'},
-  { label: "완료됨", btnClass: 'btn-green'}
-];
 
 $:{
   loading = true;
@@ -338,7 +335,7 @@ async function deleteIssue(){
   if(confirm('이슈를 삭제하시겠습니까?')){
     try {
       await api.delete(ISSUE_DETAIL_URL);
-      navigate(PROJECT_URL);
+      onDelete(issue.id)
     } catch (error) {
       console.error(error);
     }
@@ -393,6 +390,11 @@ async function toggleSubscription(){
     <div class='px-4 flex justify-between items-center'>
       <div class='text-gray-500'>{issue.key}</div>
       <div>
+        <div class='rounded-lg cursor-pointer inline-block hover:bg-gray-100 px-2 py-2' on:click={deleteIssue}>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </div>
         <div class='subscribe-btn rounded-lg cursor-pointer inline-block hover:bg-gray-100 px-2 py-2' on:click={toggleSubscription}>
           {#if issue.subscribers.includes($user.pk)}
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -406,7 +408,7 @@ async function toggleSubscription(){
           </svg>
           {/if}
         </div>
-        <div class='subscribe-btn rounded-lg cursor-pointer inline-block hover:bg-gray-100 px-2 py-2' on:click={onClose}>
+        <div class='rounded-lg cursor-pointer inline-block hover:bg-gray-100 px-2 py-2' on:click={onClose}>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
           </svg>
@@ -610,7 +612,7 @@ async function toggleSubscription(){
                 </div>
                 {/each}
               
-                <div class="history-page-nav">
+                <div class="page-nav">
                   <PaginationNav
                     totalItems="{history.count}"
                     pageSize="{history.page_size}"
@@ -628,7 +630,6 @@ async function toggleSubscription(){
       </div>
     
   </div>
-
 </section>
 {/if}
 

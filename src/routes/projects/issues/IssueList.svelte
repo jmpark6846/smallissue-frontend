@@ -9,6 +9,7 @@ import { project } from '../../../store';
 import IssueDetail from './IssueDetail.svelte';
 import Dropdown from '../../../components/Dropdown/Dropdown.svelte';
 import DropdownMenu from '../../../components/Dropdown/DropdownMenu.svelte';
+import { issueStatus } from '../../../utils/common';
 
 const params = useParams();
 
@@ -19,16 +20,18 @@ let newIssueButton;
 let newIssueTitleInput;
 let issueListEl;
 let issuesSortable;
-let open = false;
+
+let issuesSource = [];
 $: issues = [];
 $: ISSUES_URL = `/projects/${$params.id}/issues/`;
+
 let issue = null;
 let isIssueSidebarShow = false;
 // $:{
 //   if(issueListEl){
 //     issuesSortable = Sortable.create(issueListEl, {
 //       animation: 150,
-//       ghostClass: 'blue-background-class',
+//       ghostClass: 'blue-backxground-class',
 //       chosenClass: 'sortable-chosen',
 //       onEnd: async function(e){
 //         try {
@@ -42,11 +45,49 @@ let isIssueSidebarShow = false;
 //   }
 // }
 
-const issueStatus = [
-  { label: "해야 할 일", btnClass: 'btn'}, 
-  { label: "진행 중", btnClass: 'btn-blue'},
-  { label: "완료됨", btnClass: 'btn-green'}
-];
+/*
+options 
+[option]
+
+option 
+{
+  issue attribute: value
+}
+*/
+
+function statusButtonClick(option){
+  const buttons = document.getElementsByClassName('status-button')
+  for(let i=0;i<buttons.length;i++){
+    buttons[i].classList.remove('active');
+  }
+  
+  if(option){
+    let status = Object.values(option)[0]
+    
+    for(let i=0;i<buttons.length;i++){
+      if(buttons[i].getAttribute('data-status') === String(status)){
+        buttons[i].classList.add('active');
+      }
+    }
+  }else{
+    const button = document.getElementById('status-all-button');
+    button.classList.add('active');
+    issues=[...issuesSource]
+  }
+  let options = [];
+  if(option){
+    options = [option]
+  }
+  filterIssues(options)
+}
+function filterIssues(options){ 
+  let filtered = [...issuesSource];
+  for(const opt of options){
+    let key = Object.keys(opt)[0]
+    filtered = filtered.filter(issue=>issue[key]===opt[key])
+  }
+  issues = [ ...filtered ]
+}
 
 function getProject(){
   return api.get(`projects/${$params.id}/`);
@@ -75,7 +116,8 @@ onMount(async () => {
   try {
     const res = await Promise.all([getProject(), getProjectIssues()]);
     project.set(res[0].data)
-    issues = res[1].data
+    issuesSource = res[1].data
+    issues = [...issuesSource]
     loading=false;
     await tick();
     // await issueClick(issues[0].id)
@@ -179,6 +221,12 @@ function updateCurrentIssue(currentIssue){
   })
 }
 
+function handleDelete(id){
+  issuesSource = [ ...issuesSource.filter(issue=>issue.id !== id)];
+  issues = [ ...issues.filter(issue=>issue.id !== id)];
+  toggleIssueSidebar();
+}
+
 
 </script>
 
@@ -194,75 +242,84 @@ function updateCurrentIssue(currentIssue){
   </div>
 </section>
 {:else}
-<section class='px-4 lg:px-8 flex space-x-4 flex-auto h-full'>
-  <div id='issue-list' class='flex-auto'>
-    <div class='rounded-lg bg-white mb-1'>
-      <div class='py-4 px-4'>이슈 {issues.length}개</div>
-      
-      <div bind:this={issueListEl} class='flex flex-col'>
-        {#each issues as issue, issue_index (issue.id)}
-          <div data-id={issue.id} class="flex flex-col md:items-center md:flex-row hover:bg-gray-100 hover:cursor-pointer py-3 px-4 last:rounded-b-lg" on:click={()=>issueClick(issue.id, issue_index)}>
-            <div class='flex-auto mb-1 lg:mb-0'><span class='text-gray-500 hidden lg:inline-block text-sm mr-4'>{issue.key}</span><span class="font-medium">{issue.title}</span></div>
-
-            <div class='flex justify-between items-center'>
-              <span class='text-gray-500 lg:hidden block text-sm mr-4'>{issue.key}</span>
-              <div class='gap-3 flex flex-row text-gray-800' on:click={(e)=>{ e.stopPropagation() }}>
-                <Dropdown on:click={loadProjectUsers}>
-                  <div class="flex items-center rounded-lg px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 focus:bg-gray-300 cursor-pointer">
-                    <span>{issue.assignee ? issue.assignee.username : "없음"}</span>
-                  </div>
-                </Dropdown>
-                <DropdownMenu>
-                  <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleAssigneeChange(null, issue_index)}>할당 해제</div>
-                  {#each userList as user, user_index (user_index)}
-                    <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleAssigneeChange(user_index, issue_index)}>{user.username}</div>
-                  {/each}
-                </DropdownMenu>
+<section class='px-4 lg:px-8  flex-auto h-full'>
+  <div class='space-x-2 mb-2'>
+    <button id='status-all-button' class='status-button btn active' on:click={()=>statusButtonClick()}>전체</button>
+    {#each issueStatus as status (status.value)}
+      <button data-status={status.value} class='status-button btn' on:click={()=>statusButtonClick({ status: status.value })}>{status.label}</button>
+    {/each}
+  </div>
+  <div class="flex space-x-4">
+    <div id='issue-list' class='flex-auto'>
+      <div class='rounded-lg bg-white mb-1'>
+        <div class='py-4 px-4'>이슈 {issues.length}개</div>
+        
+        <div bind:this={issueListEl} class='flex flex-col'>
+          {#each issues as issue, issue_index (issue.id)}
+            <div data-id={issue.id} class="flex flex-col md:items-center md:flex-row hover:bg-gray-100 hover:cursor-pointer py-3 px-4 last:rounded-b-lg" on:click={()=>issueClick(issue.id, issue_index)}>
+              <div class='flex-auto mb-1 lg:mb-0'><span class='text-gray-500 hidden lg:inline-block text-sm mr-4'>{issue.key}</span><span class="font-medium">{issue.title}</span></div>
   
-                <Dropdown>
-                  <div class={`flex items-center rounded-lg  px-2 py-1 text-sm cursor-pointer ${issueStatus[issue.status].btnClass}`}>
-                    <span>{issueStatus[issue.status].label}</span>
-                  </div>
-                </Dropdown>
-                <DropdownMenu>
-                  {#each issueStatus as status, status_index (status_index)}
-                    <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleModalStatusChange(status_index, issue_index)}>{status.label}</div>
-                  {/each}
-                </DropdownMenu>
+              <div class='flex justify-between items-center'>
+                <span class='text-gray-500 lg:hidden block text-sm mr-4'>{issue.key}</span>
+                <div class='gap-3 flex flex-row text-gray-800' on:click={(e)=>{ e.stopPropagation() }}>
+                  <Dropdown on:click={loadProjectUsers}>
+                    <div class="flex items-center rounded-lg px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 focus:bg-gray-300 text-gray-500 hover:text-gray-700 cursor-pointer">
+                      <span>{issue.assignee ? issue.assignee.username : "없음"}</span>
+                    </div>
+                  </Dropdown>
+                  <DropdownMenu>
+                    <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleAssigneeChange(null, issue_index)}>할당 해제</div>
+                    {#each userList as user, user_index (user_index)}
+                      <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleAssigneeChange(user_index, issue_index)}>{user.username}</div>
+                    {/each}
+                  </DropdownMenu>
+    
+                  <Dropdown>
+                    <div class={`flex items-center rounded-lg  px-2 py-1 text-sm cursor-pointer ${issueStatus[issue.status].btnClass} label`}>
+                      <span>{issueStatus[issue.status].label}</span>
+                    </div>
+                  </Dropdown>
+                  <DropdownMenu>
+                    {#each issueStatus as status, status_index (status_index)}
+                      <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleModalStatusChange(status_index, issue_index)}>{status.label}</div>
+                    {/each}
+                  </DropdownMenu>
+                </div>
               </div>
+              
             </div>
-            
-          </div>
-        {/each}
+          {/each}
+        </div>
+    
+        {#if isCreating }
+        <div 
+          class={`py-3 px-4 ${isCreating ? "ring-1 ring-blue-500" : "hidden"}`} 
+          bind:this={newIssueBlock}>
+          <input bind:this={newIssueTitleInput} type="text" class='w-full focus:outline-none leading-none' on:keypress={inputHandler} placeholder="무엇을 해야하나요?">
+        </div>
+        {/if}
+    
       </div>
-  
-      {#if isCreating }
+    
       <div 
-        class={`py-3 px-4 ${isCreating ? "ring-1 ring-blue-500" : "hidden"}`} 
-        bind:this={newIssueBlock}>
-        <input bind:this={newIssueTitleInput} type="text" class='w-full focus:outline-none leading-none' on:keypress={inputHandler} placeholder="무엇을 해야하나요?">
+        bind:this={newIssueButton} 
+        class="rounded-md py-3 px-4 hover:bg-gray-200 cursor-pointer flex flex-row items-center text-gray-700 space-x-1"
+        class:hidden={isCreating}>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
+        <span>이슈 만들기</span>
       </div>
-      {/if}
-  
     </div>
-  
-    <div 
-      bind:this={newIssueButton} 
-      class="rounded-md py-3 px-4 hover:bg-gray-200 cursor-pointer flex flex-row items-center text-gray-700 space-x-1"
-      class:hidden={isCreating}>
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
-      </svg>
-      <span>이슈 만들기</span>
+      <!-- issue sidebar -->
+    <div id="issue-sidebar" class='fixed top-0 right-0 lg:static w-full lg:w-128 hidden h-full overflow-y-auto'>
+      <div class='rounded-lg bg-white'>
+        <IssueDetail id={issue && issue.id} onDelete={handleDelete} onClose={toggleIssueSidebar} onIssueChange={updateCurrentIssue} ></IssueDetail>
+      </div>
     </div>
   </div>
 
-  <!-- issue sidebar -->
-  <div id="issue-sidebar" class='fixed top-0 right-0 lg:static w-full lg:w-128 hidden h-full overflow-y-auto'>
-    <div class='rounded-lg bg-white'>
-      <IssueDetail id={issue && issue.id} onClose={toggleIssueSidebar} onIssueChange={updateCurrentIssue} ></IssueDetail>
-    </div>
-  </div>
+  
 </section>
 {/if}
 

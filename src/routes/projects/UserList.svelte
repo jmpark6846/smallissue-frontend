@@ -10,7 +10,6 @@ import ModalFooter from "../../components/Modal/ModalFooter.svelte";
 import dayjs from "dayjs";
 import Select from 'svelte-select';
 import PaginationNav from "svelte-paginate/src/PaginationNav.svelte";
-import truncateString from "../../utils/truncateString";
 
 const params = useParams();
 let participations = { list: [], count: null, page_size: null, current_page: null };
@@ -343,15 +342,12 @@ async function deleteTeammate(id){
     {:else}
       {#each teams.list as team, index (index)}
       <div class='cursor-pointer px-4 py-4 rounded-lg bg-white hover:bg-gray-100' on:click={()=>clickTeam(team.id)}>
-        <div class='flex flex-row  items-center'>
-          <span class="font-semibold w-40 max-w-40">
+        <div class='flex flex-row  items-center '>
+          <span class="font-semibold mr-12">
             {team.name}
           </span> 
-          <span class='w-40'>
-            {#each team.users as user, index (index)}
-              {user.username}
-            {/each}
-
+          <span class=''>
+            {team.users.length}명
           </span>
         </div>
       </div>

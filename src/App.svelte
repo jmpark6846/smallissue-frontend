@@ -17,6 +17,7 @@ import UserList from './routes/projects/UserList.svelte';
 import api from './utils/api';
 import ProjectSettings from './routes/ProjectSettings.svelte';
 import { project } from './store';
+import Notfound404 from './routes/NOTFOUND404.svelte';
 dayjs.locale('ko')
 dayjs.extend(relativeTime)
 
@@ -70,6 +71,10 @@ api.defaults.baseURL = BASE_URL
 
 	<Route path='/user' component={User} />
 	<Route path='/' component={Index} />
+	<Route path='*'>
+		<Notfound404 />
+	</Route>
+
 	<!-- </Layout> -->
 </Router>
 
@@ -78,5 +83,67 @@ api.defaults.baseURL = BASE_URL
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 @import "./global.css";
+@layer components{
 
+	.btn-blue {
+		@apply py-2 px-4 rounded-lg text-sm bg-blue-100 hover:bg-blue-200 focus:bg-blue-300 text-blue-600 hover:text-blue-800 border-none;
+	}
+
+	.btn-green {
+		@apply py-2 px-4 rounded-lg text-sm bg-green-100 hover:bg-green-200 focus:bg-green-300 text-green-600 hover:text-green-800 border-none;
+	}
+
+	.btn-purple {
+		@apply py-2 px-4 rounded-lg text-sm bg-purple-100 hover:bg-purple-200 focus:bg-purple-300 text-purple-600 hover:text-purple-800 border-none;
+	}
+
+	.btn-red{
+		@apply rounded-lg px-4 py-2 text-sm bg-red-100 hover:bg-red-200 focus:bg-red-300 text-red-700;
+	}
+
+	.btn {
+		@apply py-2 px-4 rounded-lg text-sm bg-gray-100 hover:bg-gray-200 focus:bg-gray-300;
+		@apply text-gray-500 hover:text-gray-600;/* transition duration-150; */
+	}
+
+	.btn.active {
+		@apply bg-gray-200 font-semibold text-gray-700;	
+	}
+
+	.label{
+		@apply text-xs px-2 py-1 rounded-md ;
+	}
+
+	.label-gray{
+		@apply label bg-gray-100 text-gray-800;
+	}
+
+	.label-blue{
+		@apply label bg-blue-100 text-blue-800;
+	}
+
+	.label-green{
+		@apply label bg-green-100 text-green-800;
+	}
+
+	.blue-background-class{
+		@apply bg-blue-100 ring-blue-500 ring-1;
+		z-index: 500;
+	}
+	.sortable-chosen{
+		@apply bg-white;
+	}
+
+	.page-nav :global(.option){
+		@apply px-2 py-1 cursor-pointer text-gray-700 hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-300 rounded-md mr-1 text-center;
+		line-height: initial;
+	}
+
+	.page-nav :global(.option.active){
+		@apply  bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700; 
+	}
+
+	.page-nav :global(.pagination-nav){
+	}
+}
 </style>
