@@ -17,7 +17,7 @@ import UserList from './routes/projects/UserList.svelte';
 import api from './utils/api';
 import ProjectSettings from './routes/ProjectSettings.svelte';
 import { project } from './store';
-import Notfound404 from './routes/NOTFOUND404.svelte';
+import Notfound404 from './routes/NotFound404.svelte';
 dayjs.locale('ko')
 dayjs.extend(relativeTime)
 
@@ -29,7 +29,6 @@ api.defaults.baseURL = BASE_URL
 </svelte:head>
 
 <Router>
-
 	<Route path='/login'>
 		<Login />
 	</Route>
