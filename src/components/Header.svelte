@@ -68,6 +68,7 @@ async function logout(){
   const res = await api.post('accounts/logout/');
   if(res.status === 200){
     user.set(null);
+    project.set(null)
     notification.set({
       unread_count: 0,
       unread_list: []

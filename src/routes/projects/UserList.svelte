@@ -72,12 +72,12 @@ const searchUser = async(filterText, filter, team) => {
   } 
 }
 
-async function handleDeleteUser(id){
+async function handleDeleteUser(participationId){
   if (confirm('사용자를 삭제하시겠습니까?')){
     try {
-      const participation = participations.list.find(p => p.user.id === id)
-      await api.delete(`projects/${$params.id}/participations/${participation.user.id}/`);
-      participations.list = participations.list.filter(p => p.user.id !== id);
+      const participation = participations.list.find(p => p.id === participationId)
+      await api.delete(`projects/${$params.id}/participations/${participation.id}/`);
+      participations.list = participations.list.filter(p => p.id !== participationId);
     } catch (error) {
       console.error(error);
     }
@@ -287,7 +287,7 @@ async function deleteTeammate(id){
           </td> 
           <td class='flex justify-center'>
             {#if $user.pk === $project.leader.id}
-            <div class='text-center cursor-pointer' on:click={()=>handleDeleteUser(p.user.id)} >
+            <div class='text-center cursor-pointer' on:click={()=>handleDeleteUser(p.id)} >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
