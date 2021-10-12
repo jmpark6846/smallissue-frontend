@@ -1,23 +1,24 @@
 <script>
 import './utils/dropdown';
 import dayjs from 'dayjs'
-import 'dayjs/locale/ko'
+import 'dayjs/locale/ko';
+import Notifications from 'svelte-notifications';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Router, Route } from 'svelte-navigator';
 import PrivateRoute from './components/PrivateRoute/PrivateRoute.svelte';
 import Index from './routes/index.svelte';
 import Layout from "./routes/layout.svelte";
 import Login from './routes/login.svelte';
-import User from './routes/user.svelte';
 import ProjectList from './routes/projects/ProjectList.svelte';
 import IssueList from './routes/projects/issues/IssueList.svelte';
 import Example from './routes/example.svelte';
 import IssueDetail from './routes/projects/issues/IssueDetail.svelte';
 import UserList from './routes/projects/UserList.svelte';
 import api from './utils/api';
-import ProjectSettings from './routes/ProjectSettings.svelte';
+import ProjectSettings from './routes/projects/ProjectSettings.svelte';
 import { project } from './store';
 import Notfound404 from './routes/NotFound404.svelte';
+import Profile from './routes/profile.svelte';
 dayjs.locale('ko')
 dayjs.extend(relativeTime)
 
@@ -28,6 +29,7 @@ api.defaults.baseURL = BASE_URL
 	<script src="https://cdn.tiny.cloud/1/hc0aj9chontfnpqrhoue1ms95l96pb9tcm1uroo8447dr9ek/tinymce/5/tinymce.min.js" referrerpolicy="origin" ></script>
 </svelte:head>
 
+<Notifications>
 <Router>
 	<Route path='/login'>
 		<Login />
@@ -68,14 +70,18 @@ api.defaults.baseURL = BASE_URL
 		</Layout>
 	</PrivateRoute>
 
-	<Route path='/user' component={User} />
+	<PrivateRoute path="profile" let:location>
+		<Layout>
+			<h1 slot='header'>프로필</h1>     
+			<Profile slot="body"/>
+		</Layout>
+	</PrivateRoute>	
 	<Route path='/' component={Index} />
 	<Route path='*'>
 		<Notfound404 />
 	</Route>
-
-	<!-- </Layout> -->
 </Router>
+</Notifications>
 
 <style global>
 @import "tailwindcss/base";

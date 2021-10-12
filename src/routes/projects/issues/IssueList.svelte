@@ -25,7 +25,7 @@ let issuesSource = [];
 $: issues = [];
 $: ISSUES_URL = `/projects/${$params.id}/issues/`;
 
-let issue = null;
+let openedIssue = null;
 let isIssueSidebarShow = false;
 // $:{
 //   if(issueListEl){
@@ -112,6 +112,7 @@ $: {
   }
 }
 
+
 onMount(async () => {
   try {
     const res = await Promise.all([getProject(), getProjectIssues()]);
@@ -143,6 +144,7 @@ async function createNewIssue(){
       author: $user.pk
     }
     const res = await api.post(`projects/${$params.id}/issues/`, data);
+    issuesSource = [ ...issuesSource, res.data ]
     issues = [ ...issues, res.data ];
     newIssueTitleInput.value = "";
     
@@ -151,8 +153,7 @@ async function createNewIssue(){
   }
 }
 
-async function handleModalStatusChange(status_index, issue_index){
-  issues[issue_index].status = status_index
+async function handleStatusChange(status_index, issue_index){
   await updateIssue(issue_index, { status: status_index })
 }
 
@@ -180,45 +181,60 @@ async function updateIssue(index, updated){
 
   try {
     const res = await api.patch(`/projects/${$params.id}/issues/${issues[index].id}/`, data);
-    issues[index] = { ...issues[index], ...res.data }
+    updateIssuesSource(res.data)
+    updateIssueDisplay(res.data)
   } catch (error) {
     console.error(error);
   }
 }
 
+function updateIssuesSource(updatedIssue){
+  for(let i=0;i<issuesSource.length;i++){
+    if(issuesSource[i].id === updatedIssue.id){
+      issuesSource[i] = { ...issuesSource[i], ...updatedIssue}
+      break;
+    }
+  }
+}
+
+function updateIssueDisplay(updatedIssue){
+  for(let i=0;i<issuesSource.length;i++){
+    if(issues[i].id === updatedIssue.id){
+      issues[i] = { ...issues[i], ...updatedIssue}
+      break;
+    }
+  }
+  openedIssue = updatedIssue
+}
 function toggleIssueSidebar(){
   const issueSidebarEl = document.getElementById('issue-sidebar');
   issueSidebarEl.classList.toggle('hidden');
   issueSidebarEl.classList.toggle('block');
   isIssueSidebarShow = !isIssueSidebarShow;
   if(!isIssueSidebarShow){
-    issue = null;
+    openedIssue = null;
   }
 }
 async function issueClick(id, index){
   if(isIssueSidebarShow){
-    if(id === issue.id){
-      issue = null;
-      toggleIssueSidebar(id)
+    if(id === openedIssue.id){
+      toggleIssueSidebar()
       return ;
     }
   }else{
-    toggleIssueSidebar(id)
+    toggleIssueSidebar()
   }
   try { 
     const res = await api.get(ISSUES_URL+id)
-    issue = res.data;
+    openedIssue = res.data;
   } catch (error) {
     console.error(error);
   }
 }
 
-function updateCurrentIssue(currentIssue){
-  issues.forEach((issue, idx) => {
-    if(issue.id === currentIssue.id){
-      issues[idx] = currentIssue;
-    }
-  })
+function updateOpenedIssue(currentIssue){
+  updateIssuesSource(currentIssue)
+  updateIssueDisplay(currentIssue)
 }
 
 function handleDelete(id){
@@ -281,7 +297,7 @@ function handleDelete(id){
                   </Dropdown>
                   <DropdownMenu>
                     {#each issueStatus as status, status_index (status_index)}
-                      <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleModalStatusChange(status_index, issue_index)}>{status.label}</div>
+                      <div class="px-4 py-2 hover:bg-gray-100 cursor-pointer" on:click={()=>handleStatusChange(status_index, issue_index)}>{status.label}</div>
                     {/each}
                   </DropdownMenu>
                 </div>
@@ -314,7 +330,7 @@ function handleDelete(id){
       <!-- issue sidebar -->
     <div id="issue-sidebar" class='fixed top-0 right-0 lg:static w-full lg:w-128 hidden h-full overflow-y-auto'>
       <div class='rounded-lg bg-white'>
-        <IssueDetail id={issue && issue.id} onDelete={handleDelete} onClose={toggleIssueSidebar} onIssueChange={updateCurrentIssue} ></IssueDetail>
+        <IssueDetail id={openedIssue && openedIssue.id} status={openedIssue && openedIssue.status} assignee={openedIssue && openedIssue.assignee} onDelete={handleDelete} onClose={toggleIssueSidebar} onIssueChange={updateOpenedIssue} ></IssueDetail>
       </div>
     </div>
   </div>

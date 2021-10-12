@@ -1,10 +1,10 @@
 <script>
 import { navigate, useParams } from "svelte-navigator";
 import { onMount } from "svelte";
-import api from "../utils/api";
-import { project, user } from "../store";
-import Dropdown from "../components/Dropdown/Dropdown.svelte";
-import DropdownMenu from "../components/Dropdown/DropdownMenu.svelte";
+import api from "../../utils/api";
+import { project, user } from "../../store";
+import Dropdown from "../../components/Dropdown/Dropdown.svelte";
+import DropdownMenu from "../../components/Dropdown/DropdownMenu.svelte";
 
 const params = useParams();
 

@@ -5,6 +5,7 @@ import user from '../store/user';
 const api = axios.create({
   headers:{ 'Content-Type': 'application/json'},
   withCredentials: true,
+  
 })
 
 let isTokenRefreshing = false;
@@ -18,7 +19,7 @@ api.interceptors.response.use(response=>response, async error=> {
   // if(response.status === 500){
   //   navigate('/not_found', { replace: true})
   // }
-  
+  console.log(error)
   if(response.status === 401){    
     if (!isTokenRefreshing) {
       isTokenRefreshing = true;

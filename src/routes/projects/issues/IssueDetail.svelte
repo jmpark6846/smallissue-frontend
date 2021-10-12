@@ -18,10 +18,15 @@ import DropdownMenu from '../../../components/Dropdown/DropdownMenu.svelte'
 import { issueStatus } from '../../../utils/common';
 
 export let id=null;
+export let status = null;
+export let assignee = null;
 export let onIssueChange;
 export let onClose;
 export let onDelete;
 const params = useParams();
+
+$:issue.status=status;
+$:issue.assignee=assignee;
 
 let issue = {};
 let PROJECT_URL=null;
@@ -331,8 +336,9 @@ async function handleTags(event) {
     console.error(error);
   }
 }
+
 async function deleteIssue(){
-  if(confirm('이슈를 삭제하시겠습니까?')){
+  if(confirm('이슈를 삭제하시겠습니까?')){  
     try {
       await api.delete(ISSUE_DETAIL_URL);
       onDelete(issue.id)

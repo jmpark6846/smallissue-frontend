@@ -42,6 +42,7 @@
     "sirv-cli": "^1.0.0",
     "sortablejs": "^1.14.0",
     "svelte-navigator": "^3.1.5",
+    "svelte-notifications": "^0.9.91",
     "svelte-routing": "^1.6.0",
     "svelte-select": "^4.4.3",
     "svelte-tags-input": "^2.8.1",

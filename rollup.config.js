@@ -64,6 +64,7 @@ export default {
         postcss: true,
 				replace:[
 					['BASE_URL', JSON.stringify(process.env.BASE_URL)],
+					['FILE_BASE_PATH', JSON.stringify(process.env.FILE_BASE_PATH)],
 				]
       }),
 		}),
