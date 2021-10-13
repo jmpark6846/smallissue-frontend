@@ -11,7 +11,7 @@ import TabPanel from "../../../components/Nav/TabPanel.svelte";
 import TabPanels from "../../../components/Nav/TabPanels.svelte";
 import TextareaEditable from "../../../components/TextareaEditable.svelte";
 import user from "../../../store/user";
-import api from "../../../utils/api";
+import api, { fileDownload } from "../../../utils/api";
 import truncateString from '../../../utils/truncateString';
 import Dropdown from '../../../components/Dropdown/Dropdown.svelte'
 import DropdownMenu from '../../../components/Dropdown/DropdownMenu.svelte'
@@ -47,6 +47,10 @@ let historyLoading = true;
 let currentHistoryPage = 1;
 let tags = [];
 let isTagEditing = false;
+
+let attachmentLoading = true;
+let attachments = { list: [], count: null, page_size: null, current_page: null };
+
 
 const placeholder = '내용을 입력해주세요.';
 const editorSettings = {
@@ -94,7 +98,7 @@ async function getIssue(){
   }
 }
 
-async function getComments(page_num){
+async function getComments(page_num=1){
   commentLoading = true;
   try{
     const res = await api.get(ISSUE_DETAIL_URL+'comments/?page_num='+page_num);
@@ -313,7 +317,7 @@ function commentUpdateClick(index){
 async function getHistory(page_num){
   historyLoading = true;
   try {
-    const res = await api.get(ISSUE_DETAIL_URL+'history/?history_page='+page_num);
+    const res = await api.get(ISSUE_DETAIL_URL+'history/?page_num='+page_num);
     history = res.data
     historyLoading = false;
   } catch (error) {
@@ -356,6 +360,29 @@ async function toggleSubscription(){
     console.error(error);
   }
 
+}
+async function getAttachments(page_num){
+  const params = {
+    page_num,
+    issue: id
+  }
+
+  attachmentLoading = true;
+  try {
+    const res = await api.get(PROJECT_URL+'attachments/', { params });
+    attachments = res.data
+    attachmentLoading = false;
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function handleAttachmentDownload(url, filename){
+  try {
+    await fileDownload(url, filename)
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 </script>
@@ -498,7 +525,8 @@ async function toggleSubscription(){
 
         <Nav tabpanels="tabpanels">
           <NavItem target="panel-1" active on:click={async()=>await getComments(1)}><span class="text-sm cursor-pointer">댓글</span></NavItem>
-          <NavItem target="panel-2" on:click={async()=>await getHistory(1)}><span class="text-sm cursor-pointer">히스토리</span></NavItem>
+          <NavItem target="panel-2" on:click={async()=>await getAttachments(1)}><span class="text-sm cursor-pointer">첨부파일</span></NavItem>
+          <NavItem target="panel-3" on:click={async()=>await getHistory(1)}><span class="text-sm cursor-pointer">히스토리</span></NavItem>
         </Nav>
         <div class="mt-2">
           <TabPanels id="tabpanels">
@@ -537,15 +565,46 @@ async function toggleSubscription(){
                   <PaginationNav
                     totalItems="{comments.count}"
                     pageSize="{comments.page_size}"
-                    currentPage="{currentCommentPage}"
+                    currentPage="{comments.current_page}"
                     limit="{2}"
                     showStepOptions="{false}"
-                    on:setPage="{async (e) => {currentCommentPage = e.detail.page; await getComments(currentCommentPage);}}"
+                    on:setPage="{async (e) => await getComments(e.detail.page)}"
                   />
                 </div>
               {/if}
             </TabPanel>
             <TabPanel id="panel-2">
+              <div class='input mb-4'>
+                <div class='text-gray-500'>첨부파일</div>
+              </div>     
+              
+              {#if attachmentLoading }
+                loading...
+              {:else}
+                {#each attachments.list as atc, index (index)}
+                <div class='mb-5' on:click={async () => await handleAttachmentDownload(atc.file, atc.filename)}>
+                  <div class='font-medium mb-1'>{atc.title}<span class='ml-2 text-sm text-gray-500'>{dayjs(atc.uploaded_at).fromNow()}</span></div>
+                    <div class='border bg-white rounded px-2 py-2 cursor-pointer hover:bg-gray-100'> 
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                      {truncateString(atc.filename, 80)}
+                    </div>
+                </div>
+                {/each}
+                <div class="page-nav">
+                  <PaginationNav
+                    totalItems="{attachments.count}"
+                    pageSize="{attachments.page_size}"
+                    currentPage="{attachments.current_page}"
+                    limit="{2}"
+                    showStepOptions="{false}"
+                    on:setPage="{async (e) => await getAttachments(e.detail.page)}"
+                  />
+                </div>
+              {/if}
+            </TabPanel>
+            <TabPanel id="panel-3">
               {#if historyLoading }
                 loading..
               {:else} 
@@ -622,13 +681,12 @@ async function toggleSubscription(){
                   <PaginationNav
                     totalItems="{history.count}"
                     pageSize="{history.page_size}"
-                    currentPage="{currentHistoryPage}"
+                    currentPage="{history.current_page}"
                     limit="{2}"
                     showStepOptions="{false}"
-                    on:setPage="{async (e) => {currentHistoryPage = e.detail.page; await getHistory(currentHistoryPage);}}"
+                    on:setPage="{async (e) => await getHistory(e.detail.page)}"
                   />
                 </div>
-
               {/if}
             </TabPanel>
           </TabPanels>

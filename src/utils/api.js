@@ -49,5 +49,17 @@ api.interceptors.response.use(response=>response, async error=> {
   return Promise.reject(error)  
 })
 
+export function fileDownload(url, filename){
+  return api.get(url, { responseType: 'blob' })
+    .then((response)=>{
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+    })
+}
+
 export default api
 
