@@ -5,7 +5,7 @@ const { addNotification } = getNotificationsContext();
 
 import api from "../utils/api";
 import userStore from '../store/user'
-let fileBasePath = FILE_BASE_PATH
+
 let loading=true;
 let user;
 let profile;
@@ -86,7 +86,7 @@ const onFileSelected =(e)=>{
         {#if avatar}
         <img class='object-cover w-48 h-48 rounded-full' src="{avatar}" alt="d" />
         {:else if profile.file}
-          <img src={fileBasePath+profile.file} alt="profile picture" class='object-cover w-48 h-48 rounded-full' />
+          <img src={profile.file} alt="profile picture" class='object-cover w-48 h-48 rounded-full' />
         {:else}
           <img class='object-cover w-48 h-48 rounded-full' src="https://cdn4.iconfinder.com/data/icons/small-n-flat/24/user-alt-512.png" alt="" /> 
         {/if}
