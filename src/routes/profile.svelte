@@ -28,7 +28,6 @@ onMount(async()=>{
 })
 
 async function updateProfile(){
-  console.log(imageUploadEl.files)
   if(imageUploadEl.files.length !== 0){
     let filename = imageUploadEl.files[0].name
     let arr = filename.split('.')

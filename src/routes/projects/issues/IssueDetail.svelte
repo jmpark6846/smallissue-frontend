@@ -50,6 +50,7 @@ let isTagEditing = false;
 
 let attachmentLoading = true;
 let attachments = { list: [], count: null, page_size: null, current_page: null };
+let fileInputEl;
 
 
 const placeholder = '내용을 입력해주세요.';
@@ -385,6 +386,33 @@ async function handleAttachmentDownload(url, filename){
   }
 }
 
+const onFileSelected = (e)=>{
+  // const fileUploadButtonDiv = document.getElementById('file-upload-button');
+  // fileUploadButtonDiv.innerHTML = e.target.files[0].name
+  handleFileUpload()
+}
+
+async function handleFileUpload(){
+  if(fileInputEl.files.length !== 0){
+    const formData = new FormData();
+    formData.append('file', fileInputEl.files[0]);
+    formData.append('author', $user.pk);
+    formData.append('project', $params.id);
+    formData.append('content_type_string', 'issue');
+    formData.append('content_id', id);
+  
+    try {
+      const res = await api.post(PROJECT_URL+'attachments/', formData, { headers: { 'Content-Type': 'multipart/form-data'}});
+      attachments.list = [ res.data, ...attachments.list ]
+
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+}
+
+
 </script>
 
 <svelte:head>
@@ -574,17 +602,23 @@ async function handleAttachmentDownload(url, filename){
               {/if}
             </TabPanel>
             <TabPanel id="panel-2">
-              <div class='input mb-4'>
-                <div class='text-gray-500'>첨부파일</div>
-              </div>     
-              
               {#if attachmentLoading }
                 loading...
               {:else}
+                <div class='mb-4'>
+                  <div id='file-upload-button' class="bg-gray-100 rounded px-4 py-4 cursor-pointer hover:bg-gray-200" on:click={()=>fileInputEl.click()}>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span>첨부파일 업로드 하기</span>
+                  </div>
+                  <input class='hidden' bind:this={fileInputEl} type="file" accept="*" on:change={(e)=>onFileSelected(e)}>
+                </div>
+
                 {#each attachments.list as atc, index (index)}
-                <div class='mb-5' on:click={async () => await handleAttachmentDownload(atc.file, atc.filename)}>
-                  <div class='font-medium mb-1'>{atc.title}<span class='ml-2 text-sm text-gray-500'>{dayjs(atc.uploaded_at).fromNow()}</span></div>
-                    <div class='border bg-white rounded px-2 py-2 cursor-pointer hover:bg-gray-100'> 
+                <div class='mb-5'>
+                  <div class='font-medium mb-1'>{atc.author.username}<span class='ml-2 text-sm text-gray-500'>{dayjs(atc.uploaded_at).fromNow()}</span></div>
+                    <div class='border bg-white rounded px-2 py-2 cursor-pointer hover:bg-gray-100'  on:click={async () => await handleAttachmentDownload(atc.file, atc.filename)}> 
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
