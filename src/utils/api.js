@@ -1,6 +1,9 @@
 import axios from "axios";
+import {getNotificationsContext} from 'svelte-notifications';
 import { navigate } from "svelte-navigator";
-import user from '../store/user';
+import { get } from "svelte/store";
+import { appNoti, user } from "../store";
+import { READONLY_NOTI } from "./common";
 
 const api = axios.create({
   headers:{ 'Content-Type': 'application/json'},
@@ -19,8 +22,30 @@ api.interceptors.response.use(response=>response, async error=> {
   // if(response.status === 500){
   //   navigate('/not_found', { replace: true})
   // }
-  console.log(error)
+
+  if(response.status === 403){
+    for(const group of get(user).groups){
+      if(group.name === 'read_only'){
+        appNoti.update(v=>[ ...v, READONLY_NOTI])
+      }
+    }
+  }
   if(response.status === 401){    
+    if(response.data.code === "token_not_valid"){
+      return api.post('accounts/logout/')
+      .then(res=>{
+        user.set(null);
+        project.set(null)
+        notification.set({
+          unread_count: 0,
+          unread_list: []
+        });
+        const from = ($location.state && $location.state.from) || "/login";
+        navigate(from, { replace: true });
+      })
+      .catch(err=>console.error(err))
+    }
+
     if (!isTokenRefreshing) {
       isTokenRefreshing = true;
       

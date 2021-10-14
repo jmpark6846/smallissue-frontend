@@ -5,3 +5,8 @@ export const issueStatus = [
   {value:3, label: "보류", btnClass: 'btn-purple'}
 ];
 
+
+export const READONLY_NOTI = {
+  text:"읽기전용 사용자입니다.",
+  type:"danger"
+}

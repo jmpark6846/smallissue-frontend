@@ -1,8 +1,25 @@
 <script>
 import { link } from 'svelte-navigator';
-import DropdownMenu from '../components/Dropdown/DropdownMenu.svelte';
 import Header from "../components/Header.svelte";
-import { project, user } from '../store';
+import { project, user, appNoti } from '../store';
+import {getNotificationsContext} from 'svelte-notifications';
+
+const { addNotification } = getNotificationsContext();
+
+$:{
+  if($appNoti.length > 0 ){
+    for(const noti of $appNoti){
+      console.log(noti)
+      addNotification({
+        text: noti.text,
+        type: noti.type,
+        position: 'bottom-center',
+        removeAfter: 4000
+      })
+    }
+    appNoti.set([]);
+  }
+}
 
 const tippyOptions = {
   placement: "right",

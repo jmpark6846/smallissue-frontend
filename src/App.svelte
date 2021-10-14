@@ -16,13 +16,14 @@ import IssueDetail from './routes/projects/issues/IssueDetail.svelte';
 import UserList from './routes/projects/UserList.svelte';
 import api from './utils/api';
 import ProjectSettings from './routes/projects/ProjectSettings.svelte';
-import { project } from './store';
+import { appNoti, project } from './store';
 import Notfound404 from './routes/NotFound404.svelte';
 import Profile from './routes/profile.svelte';
-dayjs.locale('ko')
-dayjs.extend(relativeTime)
 
-api.defaults.baseURL = BASE_URL
+dayjs.locale('ko');
+dayjs.extend(relativeTime);
+api.defaults.baseURL = BASE_URL;
+
 </script>
 	
 <svelte:head>
@@ -35,10 +36,6 @@ api.defaults.baseURL = BASE_URL
 		<Login />
 	</Route>
 	<Route path='/example' component={Example} />
-	<PrivateRoute path="projects/:project_id/issues/:issue_id" let:location>
-		<h1 slot='header'>디테일</h1> 
-		<IssueDetail slot='body'/>
-	</PrivateRoute>
 	<PrivateRoute path="projects/:id/settings/" let:location>
 		<Layout>
 			<h1 slot='header'>프로젝트 설정</h1>     

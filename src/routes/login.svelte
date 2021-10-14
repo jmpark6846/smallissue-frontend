@@ -8,7 +8,8 @@ const navigate = useNavigate();
 const location = useLocation();
 const demousers = [
   { email: 'demouser@naver.com', password: 'demouser' },
-  { email: 'chulsoo@naver.com', password: 'chulsoo' }
+  { email: 'chulsoo@naver.com', password: 'chulsoo' },
+  { email: 'demouser3@naver.com', password: 'demouser3' }
 ]
 
 function getUnreadCount(){
@@ -45,6 +46,7 @@ async function login_demo(demouser_index){
       <Button>깃헙으로 시작하기</Button>
       <Button primary on:click={async ()=> await login_demo(0)}>데모유저로 시작하기</Button>
       <Button primary on:click={async ()=>await login_demo(1)}>데모유저2로 시작하기</Button>
+      <Button primary on:click={async ()=>await login_demo(2)}>데모유저3(읽기전용)으로 시작하기</Button>
       <div class:hidden={errorMessage === ''} class='bg-red-600 text-white rounded-md px-4 py-2'>{errorMessage}</div>
     </div>
     

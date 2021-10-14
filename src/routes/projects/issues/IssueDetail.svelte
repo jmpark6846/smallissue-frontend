@@ -115,12 +115,10 @@ onMount(async() => {
 });
 
 async function handleTitleChange(e){
-  issue.title = e.detail.value
   await updateIssue({ title: e.detail.value })
 }
 
 async function handleModalStatusChange(index){
-  issue.status = index
   await updateIssue({ status: index })
 }
 
@@ -137,11 +135,11 @@ async function handleAssigneeChange(index){
   const assigneeId = index === null ? null : userList[index].id;
   await updateIssue({assignee: assigneeId});
 
-  if(assigneeId){
-    issue.assignee = userList[index]
-  }else{
-    issue.assignee = null;
-  }
+  // if(assigneeId){
+  //   issue.assignee = userList[index]
+  // }else{
+  //   issue.assignee = null;
+  // }
 }
 
 async function updateIssue(updated){
@@ -185,13 +183,12 @@ function modalBodyClick(){
   tinymceloaded('editor', issue.body)
 }
 
-
 async function modalBodySave(){
   const editor = window.tinymce.get('editor');
   const content = editor.getContent()
   
   isModalBodyEditing = false;
-  issue.body = content;
+  // issue.body = content;
   await updateIssue({body: issue.body})
   editor.destroy()
   if(!issue.body){

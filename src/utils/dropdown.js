@@ -1,19 +1,5 @@
 import { createPopper } from '@popperjs/core';
 
-// // Toggle target elements using [data-collapse-toggle]
-// document.querySelectorAll('[data-collapse-toggle]').forEach(function (collapseToggleEl) {
-//     var collapseId = collapseToggleEl.getAttribute('data-collapse-toggle');
-//     var collapseEl = document.getElementById(collapseId);
-
-//     collapseToggleEl.addEventListener('click', function() {
-//         if (collapseEl.classList.contains("hidden")) {
-//             collapseEl.classList.remove("hidden");
-//         } else {
-//             collapseEl.classList.add("hidden");
-//         }
-//     });
-// });
-
 
 document.querySelectorAll('[data-dropdown-toggle]').forEach(function (dropdownToggleEl) {
   var dropdownMenuId = dropdownToggleEl.getAttribute('data-dropdown-toggle');
