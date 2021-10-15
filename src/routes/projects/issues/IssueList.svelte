@@ -10,6 +10,7 @@ import IssueDetail from './IssueDetail.svelte';
 import Dropdown from '../../../components/Dropdown/Dropdown.svelte';
 import DropdownMenu from '../../../components/Dropdown/DropdownMenu.svelte';
 import { issueStatus } from '../../../utils/common';
+import truncateString from '../../../utils/truncateString';
 
 const params = useParams();
 
@@ -272,14 +273,14 @@ function handleDelete(id){
         
         <div bind:this={issueListEl} class='flex flex-col'>
           {#each issues as issue, issue_index (issue.id)}
-            <div data-id={issue.id} class="flex flex-col md:items-center md:flex-row hover:bg-gray-100 hover:cursor-pointer py-3 px-4 last:rounded-b-lg" on:click={()=>issueClick(issue.id, issue_index)}>
-              <div class='flex-auto mb-1 lg:mb-0'><span class='text-gray-500 hidden lg:inline-block text-sm mr-4'>{issue.key}</span><span class="font-medium">{issue.title}</span></div>
-  
-              <div class='flex justify-between items-center'>
+            <div data-id={issue.id} class="flex flex-col lg:items-center lg:flex-row hover:bg-gray-100 hover:cursor-pointer py-3 px-4 last:rounded-b-lg" on:click={()=>issueClick(issue.id, issue_index)}>
+              <span class='text-gray-500 hidden lg:inline-block text-sm mr-4'>{issue.key}</span>
+              <span class="font-medium flex-auto">{isIssueSidebarShow ? truncateString(issue.title, 60) : issue.title}</span>
+              <div class='flex justify-between lg:justify-end items-center'>
                 <span class='text-gray-500 lg:hidden block text-sm mr-4'>{issue.key}</span>
                 <div class='gap-3 flex flex-row text-gray-800' on:click={(e)=>{ e.stopPropagation() }}>
                   <Dropdown on:click={loadProjectUsers}>
-                    <div class="flex items-center rounded-lg px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 focus:bg-gray-300 text-gray-500 hover:text-gray-700 cursor-pointer">
+                    <div class="flex items-center whitespace-nowrap rounded-lg px-2 py-1 text-sm bg-gray-100 hover:bg-gray-200 focus:bg-gray-300 text-gray-500 hover:text-gray-700 cursor-pointer">
                       <span>{issue.assignee ? issue.assignee.username : "없음"}</span>
                     </div>
                   </Dropdown>
@@ -291,7 +292,7 @@ function handleDelete(id){
                   </DropdownMenu>
     
                   <Dropdown>
-                    <div class={`flex items-center rounded-lg  px-2 py-1 text-sm cursor-pointer ${issueStatus[issue.status].btnClass} label`}>
+                    <div class={`flex items-center rounded-lg whitespace-nowrap px-2 py-1 text-sm cursor-pointer ${issueStatus[issue.status].btnClass} label`}>
                       <span>{issueStatus[issue.status].label}</span>
                     </div>
                   </Dropdown>
@@ -328,7 +329,7 @@ function handleDelete(id){
       </div>
     </div>
       <!-- issue sidebar -->
-    <div id="issue-sidebar" class='fixed top-0 right-0 lg:static w-full lg:w-128 hidden h-full overflow-y-auto'>
+    <div id="issue-sidebar" class='fixed top-0 right-0 lg:static w-full lg:w-128 lg:min-w-128 hidden h-full overflow-y-auto'>
       <div class='rounded-lg bg-white'>
         <IssueDetail id={openedIssue && openedIssue.id} status={openedIssue && openedIssue.status} assignee={openedIssue && openedIssue.assignee} onDelete={handleDelete} onClose={toggleIssueSidebar} onIssueChange={updateOpenedIssue} ></IssueDetail>
       </div>

@@ -38,7 +38,8 @@ module.exports = {
     extend: {
       minWidth:{
         '40': '10rem',
-        '48': '12rem'
+        '48': '12rem',
+        '128': '32rem'
       },
       spacing: {
         '104': '26rem',

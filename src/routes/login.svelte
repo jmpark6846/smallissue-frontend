@@ -9,7 +9,7 @@ const location = useLocation();
 const demousers = [
   { email: 'demouser@naver.com', password: 'demouser' },
   { email: 'chulsoo@naver.com', password: 'chulsoo' },
-  { email: 'demouser3@naver.com', password: 'demouser3' }
+  { email: 'readonly@readonly.com', password: 'readonly' }
 ]
 
 function getUnreadCount(){

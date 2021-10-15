@@ -188,8 +188,7 @@ async function modalBodySave(){
   const content = editor.getContent()
   
   isModalBodyEditing = false;
-  // issue.body = content;
-  await updateIssue({body: issue.body})
+  await updateIssue({body: content})
   editor.destroy()
   if(!issue.body){
     editorEl.innerHTML = `<div class='text-gray-500'>${placeholder}</div>`;
