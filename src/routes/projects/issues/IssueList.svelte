@@ -102,7 +102,7 @@ window.addEventListener('click', function(event) {
   if(!isCreating && newIssueButton && newIssueButton.contains(event.target)){
     isCreating = true;
   }
-  else if(isCreating && !newIssueBlock.contains(event.target) ){
+  else if(isCreating && newIssueBlock && !newIssueBlock.contains(event.target) ){
     isCreating=false;
   }
 })
