@@ -23,35 +23,27 @@ export let assignee = null;
 export let onIssueChange;
 export let onClose;
 export let onDelete;
+let PROJECT_URL=null;
+let ISSUE_DETAIL_URL=null;
 const params = useParams();
+let loading = true;
 
+let issue = {};
 $:issue.status=status;
 $:issue.assignee=assignee;
 
-let issue = {};
-let PROJECT_URL=null;
-let ISSUE_DETAIL_URL=null;
 let editorEl;
-let loading = true;
-let commentLoading = true;
 let userList = [];
 let isModalBodyEditing = false;
 
-let comments = { list: [], count: null, page_size: null, current_page: null };
-let currentCommentPage = 1;
+let isActivityLoading = true
+let comments = { list: [], count: 0, page_size: 1, current_page: 1 };
 let commentInputEl;
 let isCommentEditing = false;
 
-let history = { list: [], count: null, page_size: null, current_page: null };
-let historyLoading = true;
-let currentHistoryPage = 1;
-let tags = [];
-let isTagEditing = false;
-
-let attachmentLoading = true;
-let attachments = { list: [], count: null, page_size: null, current_page: null };
+let history = { list: [], count: 0, page_size: 1, current_page: 1 };
+let attachments = { list: [], count: 0, page_size: 1, current_page: 1 };
 let fileInputEl;
-
 
 const placeholder = '내용을 입력해주세요.';
 const editorSettings = {
@@ -70,6 +62,9 @@ const issueAttrNames = {
 
 $:{
   loading = true;
+  isModalBodyEditing = false;
+  isCommentEditing = false;
+
   if(id){
     PROJECT_URL = `/projects/${$params.id}/`;
     ISSUE_DETAIL_URL = `/projects/${$params.id}/issues/${id}/`;
@@ -82,7 +77,7 @@ $:{
       issue = res[0].data
       comments = res[1].data
       loading = false;
-      commentLoading = false;
+      isActivityLoading = false;
     }).catch(error => error) 
   }
 }
@@ -100,11 +95,11 @@ async function getIssue(){
 }
 
 async function getComments(page_num=1){
-  commentLoading = true;
+  isActivityLoading = true;
   try{
     const res = await api.get(ISSUE_DETAIL_URL+'comments/?page_num='+page_num);
     comments = res.data
-    commentLoading = false;
+    isActivityLoading = false;
   }catch(error){
     console.error(error);
   }
@@ -134,12 +129,6 @@ async function loadProjectUsers(){
 async function handleAssigneeChange(index){
   const assigneeId = index === null ? null : userList[index].id;
   await updateIssue({assignee: assigneeId});
-
-  // if(assigneeId){
-  //   issue.assignee = userList[index]
-  // }else{
-  //   issue.assignee = null;
-  // }
 }
 
 async function updateIssue(updated){
@@ -150,7 +139,7 @@ async function updateIssue(updated){
   try {
     const res = await api.put(ISSUE_DETAIL_URL, data);
     issue = res.data 
-    onIssueChange(issue, );
+    onIssueChange(res.data);
   } catch (error) {
     console.error(error);
   }
@@ -168,7 +157,6 @@ function tinymceloaded(elementId, content) {
         editor.setContent(content);
         if(editor.id === editorEl.id){
           isModalBodyEditing = true;
-          console.log(isModalBodyEditing)
         }else if(editor.id === commentInputEl.id){
           isCommentEditing = true;
         }
@@ -206,8 +194,6 @@ function modalBodyCancel(){
     editorEl.innerHTML = `<div class='text-gray-500'>${placeholder}</div>`;
   }
 }
-
-
 
 function commentInputClick(){
   tinymceloaded('commentInput', '')
@@ -312,11 +298,11 @@ function commentUpdateClick(index){
 }
 
 async function getHistory(page_num){
-  historyLoading = true;
+  isActivityLoading = true;
   try {
     const res = await api.get(ISSUE_DETAIL_URL+'history/?page_num='+page_num);
     history = res.data
-    historyLoading = false;
+    isActivityLoading = false;
   } catch (error) {
     console.error(error)
   }
@@ -364,11 +350,11 @@ async function getAttachments(page_num){
     issue: id
   }
 
-  attachmentLoading = true;
+  isActivityLoading = true;
   try {
     const res = await api.get(PROJECT_URL+'attachments/', { params });
     attachments = res.data
-    attachmentLoading = false;
+    isActivityLoading = false;
   } catch (error) {
     console.error(error)
   }
@@ -565,7 +551,7 @@ async function handleFileUpload(){
               </div>
               {/if}      
               
-              {#if commentLoading }
+              {#if isActivityLoading }
                 loading...
               {:else}
                 {#each comments.list as comment, index (index)}
@@ -598,7 +584,7 @@ async function handleFileUpload(){
               {/if}
             </TabPanel>
             <TabPanel id="panel-2">
-              {#if attachmentLoading }
+              {#if isActivityLoading }
                 loading...
               {:else}
                 <div class='mb-4'>
@@ -635,7 +621,7 @@ async function handleFileUpload(){
               {/if}
             </TabPanel>
             <TabPanel id="panel-3">
-              {#if historyLoading }
+              {#if isActivityLoading }
                 loading..
               {:else} 
                 {#each history.list as h }

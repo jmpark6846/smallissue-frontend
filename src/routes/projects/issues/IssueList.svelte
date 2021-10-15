@@ -170,7 +170,6 @@ async function loadProjectUsers(){
   }
 }
 
-
 async function handleAssigneeChange(user_index, issue_index){
   const assigneeId = user_index === null ? null : userList[user_index].id;
   await updateIssue(issue_index, {assignee: assigneeId});
@@ -182,6 +181,7 @@ async function updateIssue(index, updated){
 
   try {
     const res = await api.patch(`/projects/${$params.id}/issues/${issues[index].id}/`, data);
+    console.log(res.data)
     updateIssuesSource(res.data)
     updateIssueDisplay(res.data)
   } catch (error) {
@@ -199,6 +199,7 @@ function updateIssuesSource(updatedIssue){
 }
 
 function updateIssueDisplay(updatedIssue){
+  console.log(updatedIssue)
   for(let i=0;i<issuesSource.length;i++){
     if(issues[i].id === updatedIssue.id){
       issues[i] = { ...issues[i], ...updatedIssue}
