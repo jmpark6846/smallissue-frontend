@@ -60,14 +60,14 @@ api.defaults.baseURL = BASE_URL;
 			<IssueList slot='body'/>
 		</Layout>
 	</PrivateRoute>
-	<PrivateRoute path="projects" let:location>
+	<PrivateRoute path="projects/" let:location>
 		<Layout>
 			<h1 slot='header'>프로젝트</h1> 
 			<ProjectList slot='body'/>
 		</Layout>
 	</PrivateRoute>
 
-	<PrivateRoute path="profile" let:location>
+	<PrivateRoute path="profile/" let:location>
 		<Layout>
 			<h1 slot='header'>프로필</h1>     
 			<Profile slot="body"/>
@@ -85,6 +85,7 @@ api.defaults.baseURL = BASE_URL;
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 @import "./global.css";
+
 @layer components{
 
 	.btn-blue {
@@ -147,5 +148,10 @@ api.defaults.baseURL = BASE_URL;
 
 	.page-nav :global(.pagination-nav){
 	}
+	
+  .sidebar-item.active{
+		@apply text-gray-800 bg-gray-200 font-semibold hover:bg-gray-300;
+	}
+
 }
 </style>

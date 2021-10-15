@@ -24,10 +24,8 @@ api.interceptors.response.use(response=>response, async error=> {
   // }
 
   if(response.status === 403){
-    for(const group of get(user).groups){
-      if(group.name === 'read_only'){
-        appNoti.update(v=>[ ...v, READONLY_NOTI])
-      }
+    if(get(user).is_readonly){
+      appNoti.update(v=>[ ...v, READONLY_NOTI])
     }
   }
   if(response.status === 401){    
