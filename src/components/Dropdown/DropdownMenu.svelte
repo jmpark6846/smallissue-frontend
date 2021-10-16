@@ -1,10 +1,19 @@
 <script>
+import { onMount } from "svelte";
+
+
   export let id=null;
   export let width=null;
   let menuEl;
+  let dropdownToggleEl;
 
-  function handleClick(){
-    menuEl.blur();
+  // onMount(()=>{
+  //   if(menuEl){
+  //     dropdownToggleEl = menuEl.previousElementSibling;
+  //   }
+  // });
+  function handleClick(e){
+    // dropdownToggleEl._tippy.hide();
   }
 </script>
 

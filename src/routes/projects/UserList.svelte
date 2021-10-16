@@ -221,7 +221,7 @@ async function deleteTeammate(id){
 }
 </script>
 
-<section class='px-4 lg:px-8'>
+<section class='px-4 lg:px-8 w-full'>
   <div class="flex flex-row justify-end  mb-5">
     <button class="btn-outline flex items-center" on:click={toggle}>사용자 추가하기</button>
   </div>
@@ -250,7 +250,7 @@ async function deleteTeammate(id){
   </div>
   {:else}
   
-  <table class='bg-white rounded-lg w-full mb-16 '>
+  <table class='bg-white rounded-lg w-full mb-16 w-full overflow-x-auto block whitespace-nowrap'>
     <thead>
       <tr>
         <th>이름</th>
@@ -410,6 +410,6 @@ async function deleteTeammate(id){
 </section>
 <style>
 th, td {
-  @apply px-4 py-4;
+  @apply px-3 py-2 lg:px-4 lg:py-4; 
 }
 </style>

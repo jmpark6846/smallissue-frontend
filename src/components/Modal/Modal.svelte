@@ -15,7 +15,7 @@ window.onclick = function(event) {
 <div 
   bind:this={modal} 
   class={`main-modal modal-bg shadow-lg flex opacity-0 fixed inset-0 z-50 overflow-hidden flex justify-center animated faster ${ open ? 'fadeIn z-50' : '-z-50 hidden'}`}>
-  <div class={`modal-section mx-auto rounded-lg bg-white border fixed w-96 mt-32`}>  
+  <div class={`modal-section mx-auto rounded-lg bg-white border fixed lg:w-96 mt-32`}>  
     <slot />
   </div>
 </div>
@@ -24,6 +24,7 @@ window.onclick = function(event) {
 <style>
   .modal-section { 
     overflow:auto;
+    width: calc(100% - 15px);
   }
   .modal-section.wide{
     width: 100%;

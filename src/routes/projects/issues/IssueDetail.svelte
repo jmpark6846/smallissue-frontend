@@ -473,8 +473,8 @@ async function handleFileUpload(){
   </div>
 
   <div class='info-section py-2'>
-    <div class='px-4 flex space-x-4'>
-      <div class="status-section w-1/3">
+    <div class='px-4 flex flex-wrap space-x-4'>
+      <div class="status-section">
         <div class="font-medium text-gray-800 mb-1">상태</div>
         <Dropdown>
           <div class={`flex items-center rounded-lg px-4 py-2 cursor-pointer ${issueStatus[issue.status].btnClass}`}>
@@ -490,7 +490,7 @@ async function handleFileUpload(){
           {/each}
         </DropdownMenu>
       </div>
-      <div class="assignee-section w-1/3">
+      <div class="assignee-section">
         <div class="font-medium text-gray-800 mb-1">담당자</div>
         <div>
           <Dropdown on:click={loadProjectUsers}>
@@ -635,7 +635,7 @@ async function handleFileUpload(){
                     <div>
                       <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 추가됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
                     </div> 
-                    <div class='flex items-center gap-1'>
+                    <div class='flex items-center gap-1 border rounded px-2 py-2'>
                       <div class='label-gray'style='word-break: keep-all;'>{h.new_value}</div>
                     </div>
                   </div>
@@ -644,7 +644,7 @@ async function handleFileUpload(){
                     <div>
                       <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 삭제됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
                     </div> 
-                    <div class='flex items-center gap-1'>
+                    <div class='flex items-center gap-1 border rounded px-2 py-2'>
                       <div class='label-gray' style='word-break: keep-all;'>{h.new_value}</div>
                     </div>
                   </div>
@@ -659,20 +659,20 @@ async function handleFileUpload(){
                     <div>
                       <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 업데이트됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
                     </div> 
-                    <div class='flex items-center gap-1'>
+                    <div class='flex items-center gap-1 border rounded px-2 py-2'>
                       {#if h.field === 'assignee'}
-                      <div class=''>{h.old_value.username || "없음"}</div>
+                      <div style="overflow-wrap: anywhere;">{h.old_value.username || "없음"}</div>
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
                       </svg>
-                      <div class=''>{h.new_value.username || "없음"}</div>
+                      <div style='overflow-wrap: anywhere;'>{h.new_value.username || "없음"}</div>
   
                       {:else if h.field === 'body'}
-                      <div style='word-break: keep-all;'>{truncateString(stripTags(h.old_value), 200) || "없음"}</div>
+                      <div style='overflow-wrap: anywhere;'>{truncateString(stripTags(h.old_value), 200) || "없음"}</div>
                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
                       </svg>
-                      <div style='word-break: keep-all;'>{truncateString(stripTags(h.new_value), 200) || "없음"}</div>
+                      <div style='overflow-wrap: anywhere;'>{truncateString(stripTags(h.new_value), 200) || "없음"}</div>
   
                       {:else if h.field === 'status'}
                       <div style='word-break: keep-all;'>{stripTags(issueStatus[h.old_value].label) || "없음"}</div>

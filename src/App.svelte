@@ -19,6 +19,7 @@ import ProjectSettings from './routes/projects/ProjectSettings.svelte';
 import { appNoti, project } from './store';
 import Notfound404 from './routes/NotFound404.svelte';
 import Profile from './routes/profile.svelte';
+import truncateString from './utils/truncateString';
 
 dayjs.locale('ko');
 dayjs.extend(relativeTime);
@@ -52,7 +53,8 @@ api.defaults.baseURL = BASE_URL;
 		<Layout>
 			<h1 slot='header'>
 				{#if $project }
-					{$project.name}
+					<span class='hidden sm:block'>{$project.name}</span>
+					<span class='block sm:hidden'>{truncateString($project.name, 5)}</span>
 				{:else}
 					<div class="cp-text"></div>
 				{/if}

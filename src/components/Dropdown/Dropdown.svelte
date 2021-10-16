@@ -10,20 +10,21 @@ let dropdownToggleEl;
 onMount(()=>{
     tippy(dropdownToggleEl, {
         duration: 0,
-        // arrow: roundArrow,
+        arrow: true,
+        hideOnClick: true,
         placement: 'bottom-end',
         content(reference){
             let el = document.getElementById(menu);
             if(el === null){
                 el = reference.nextElementSibling;
             }
+            el.addEventListener('click', (e)=>{
+                dropdownToggleEl._tippy.hide();
+            });
             return el
         },
         trigger: 'click',
         interactive:true,
-        on(instance, event) {
-            console.log(instance, event)
-        },
         ...tippyOptions,
         
     })

@@ -8,6 +8,11 @@ let editing = false;
 
 const dispatch = createEventDispatcher();
 function handleChange(){
+  if(!textarea.value){
+    textarea.value = valueBefore;
+    return;
+  }
+
   dispatch('change', { value: textarea.value })
 }
 function handleKeypress(e){
@@ -29,12 +34,10 @@ function handleFocus(){
   valueBefore = textarea.value;
 }
 
-function handleBlur(){
-  if(textarea.value !== valueBefore){
-    dispatch('blur', {value: textarea.value});
-  }
+function handleBlur(e){
   editing=false;
 }
+
 </script>
 
 {#if editing}
