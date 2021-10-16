@@ -38,11 +38,15 @@ function handleBlur(){
 </script>
 
 {#if editing}
-  <textarea bind:this={textarea} oninput='this.style.height = "";this.style.height = this.scrollHeight + 3 + "px";'
-  class='w-full  textarea p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none' name="modalissue-title" spellcheck={false}
-  on:change={handleChange} on:keypress={handleKeypress} on:focus={handleFocus} on:blur={handleBlur} >{content}</textarea>
+  <textarea 
+    name="modalissue-title" 
+    spellcheck={false}
+    bind:this={textarea} 
+    oninput='this.style.height = "";this.style.height = this.scrollHeight + 3 + "px";'
+    class='w-full  textarea p-1 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none' 
+    on:change={handleChange} on:keypress={handleKeypress} on:focus={handleFocus} on:blur={handleBlur}>{content}</textarea>
 {:else}
-  <div class='content p-1 hover:bg-gray-200 cursor-pointer rounded-md min-h-10 overflow' on:click={handleClick}>
+  <div class='content p-1 hover:bg-gray-100 cursor-pointer rounded-md min-h-10 overflow' on:click={handleClick}>
     {content}
   </div> 
 {/if}

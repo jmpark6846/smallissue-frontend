@@ -113,6 +113,23 @@ api.defaults.baseURL = BASE_URL;
 		@apply bg-gray-200 font-semibold text-gray-700;	
 	}
 
+	input, .input{
+		-webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-color: #fff;
+    border-color: #6b7280;
+    border-width: 1px;
+    border-radius: 0px;
+    padding-top: 0.5rem;
+    padding-right: 0.75rem;
+    padding-bottom: 0.5rem;
+    padding-left: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    --tw-shadow: 0 0 #0000;
+	}
+	
 	.label{
 		@apply text-xs px-2 py-1 rounded-md ;
 	}
@@ -148,10 +165,10 @@ api.defaults.baseURL = BASE_URL;
 
 	.page-nav :global(.pagination-nav){
 	}
-	
+
   .sidebar-item.active{
 		@apply text-gray-800 bg-gray-200 font-semibold hover:bg-gray-300;
 	}
-
+	
 }
 </style>

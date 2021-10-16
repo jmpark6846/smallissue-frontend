@@ -2,7 +2,7 @@ module.exports = {
   mode: 'jit',
   purge: ['./src/**/*.svelte'],
   plugins: [
-    require('@tailwindcss/forms'),
+    // require('@tailwindcss/forms'),
     require('tailwind-content-placeholder')({
       height:1.5,
       placeholders: {

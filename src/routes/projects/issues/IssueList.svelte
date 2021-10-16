@@ -261,10 +261,10 @@ function handleDelete(id){
 </section>
 {:else}
 <section class='px-4 lg:px-8  flex-auto h-full'>
-  <div class='space-x-2 mb-2'>
-    <button id='status-all-button' class='status-button btn active' on:click={()=>statusButtonClick()}>전체</button>
+  <div class='space-y-2 mb-2'>
+    <button id='status-all-button' class='status-button btn active mr-2' on:click={()=>statusButtonClick()}>전체</button>
     {#each issueStatus as status (status.value)}
-      <button data-status={status.value} class='status-button btn' on:click={()=>statusButtonClick({ status: status.value })}>{status.label}</button>
+      <button data-status={status.value} class='status-button btn mr-2' on:click={()=>statusButtonClick({ status: status.value })}>{status.label}</button>
     {/each}
   </div>
   <div class="flex space-x-4">
@@ -313,7 +313,7 @@ function handleDelete(id){
         <div 
           class={`py-3 px-4 ${isCreating ? "ring-1 ring-blue-500" : "hidden"}`} 
           bind:this={newIssueBlock}>
-          <input bind:this={newIssueTitleInput} type="text" class='w-full focus:outline-none leading-none' on:keypress={inputHandler} placeholder="무엇을 해야하나요?">
+          <input bind:this={newIssueTitleInput} type="text" class='w-full focus:outline-none leading-none p-0 border-0' on:keypress={inputHandler} placeholder="무엇을 해야하나요?">
         </div>
         {/if}
     
@@ -330,10 +330,8 @@ function handleDelete(id){
       </div>
     </div>
       <!-- issue sidebar -->
-    <div id="issue-sidebar" class='fixed top-0 right-0 lg:static w-full lg:w-128 lg:min-w-128 hidden h-full overflow-y-auto'>
-      <div class='rounded-lg bg-white'>
-        <IssueDetail id={openedIssue && openedIssue.id} status={openedIssue && openedIssue.status} assignee={openedIssue && openedIssue.assignee} onDelete={handleDelete} onClose={toggleIssueSidebar} onIssueChange={updateOpenedIssue} ></IssueDetail>
-      </div>
+    <div id="issue-sidebar" class='rounded-lg bg-white fixed top-0 right-0 lg:static w-full lg:w-128 lg:min-w-128 hidden h-full overflow-y-auto'>
+      <IssueDetail id={openedIssue && openedIssue.id} status={openedIssue && openedIssue.status} assignee={openedIssue && openedIssue.assignee} onDelete={handleDelete} onClose={toggleIssueSidebar} onIssueChange={updateOpenedIssue} ></IssueDetail>
     </div>
   </div>
 

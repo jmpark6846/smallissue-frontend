@@ -44,10 +44,10 @@ function handleRouteChange(pathname){
 </script>
   
 
-<div class='h-full'>
-  <div class="lg:flex h-full">
+<div class='h-full w-full'>
+  <div class="lg:flex h-full w-full">
   
-    <aside id='sidebar' class='flex-none w-full lg:pt-4 space-y-6 lg:w-60 h-full shadow-sm h-full bg-gray-50 text-sm absolute lg:static top-0 left-0 z-10 hidden lg:block  '>
+    <aside id='sidebar' class='flex-none w-full lg:pt-4 space-y-6 lg:w-60 shadow-sm h-full bg-gray-50 text-sm absolute lg:static top-0 left-0 z-10 hidden lg:block  '>
       <div class='px-2 lg:px-4'>
         <div class="py-4">
           <div class="flex items-center px-2" style="height: 46px;">

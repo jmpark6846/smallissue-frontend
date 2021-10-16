@@ -15,7 +15,7 @@ import api, { fileDownload } from "../../../utils/api";
 import truncateString from '../../../utils/truncateString';
 import Dropdown from '../../../components/Dropdown/Dropdown.svelte'
 import DropdownMenu from '../../../components/Dropdown/DropdownMenu.svelte'
-import { issueStatus } from '../../../utils/common';
+import { issueStatus, stripTags } from '../../../utils/common';
 
 export let id=null;
 export let status = null;
@@ -32,6 +32,7 @@ let issue = {};
 $:issue.status=status;
 $:issue.assignee=assignee;
 
+let editorInstances = [];
 let editorEl;
 let userList = [];
 let isModalBodyEditing = false;
@@ -51,6 +52,8 @@ const editorSettings = {
     resize:true,
     placeholder,
     statusbar: false,
+    plugins: 'lists advlist codesample',
+    toolbar: 'undo redo styleselect bold italic bullist numlist outdent indent codesample',
 }
 const issueAttrNames = {
   title: '제목',
@@ -64,11 +67,14 @@ $:{
   loading = true;
   isModalBodyEditing = false;
   isCommentEditing = false;
+  console.log(editorInstances)
+  editorInstances.forEach(editor => editor.destroy());
+  editorInstances = [];
 
   if(id){
     PROJECT_URL = `/projects/${$params.id}/`;
     ISSUE_DETAIL_URL = `/projects/${$params.id}/issues/${id}/`;
-
+    
     Promise.all([
       api.get(ISSUE_DETAIL_URL),
       api.get(ISSUE_DETAIL_URL+'comments/?page_num=1')
@@ -151,6 +157,8 @@ function tinymceloaded(elementId, content) {
     auto_focus: elementId,
     setup: function(editor) {
       editor.on('init', function(e) {
+        editorInstances.push(editor)
+
         if(!content){
           content = ""
         }
@@ -168,11 +176,11 @@ function tinymceloaded(elementId, content) {
 }
 
 function modalBodyClick(){
-  tinymceloaded('editor', issue.body)
+  tinymceloaded('body-editor', issue.body)
 }
 
 async function modalBodySave(){
-  const editor = window.tinymce.get('editor');
+  const editor = window.tinymce.get('body-editor');
   const content = editor.getContent()
   
   isModalBodyEditing = false;
@@ -184,7 +192,7 @@ async function modalBodySave(){
 }
 
 function modalBodyCancel(){
-  const editor = window.tinymce.activeEditor;
+  const editor = window.tinymce.get('body-editor');
   if(issue.body){
     editor.setContent(issue.body);
   }
@@ -308,11 +316,6 @@ async function getHistory(page_num){
   }
 }
 
-function stripTags(htmlStr){
-  const dom = new DOMParser().parseFromString(htmlStr, 'text/html');
-  const txt = dom.body.textContent;
-  return txt
-}
 
 async function handleTags(event) {
   const data = { tags: event.detail.tags }
@@ -428,7 +431,7 @@ async function handleFileUpload(){
 </section>
 {:else}
 
-<section class="py-2"> 
+<section class="py-2 bg-white"> 
   <div class="topbar-section py-2">
     <div class='px-4 flex justify-between items-center'>
       <div class='text-gray-500'>{issue.key}</div>
@@ -510,220 +513,212 @@ async function handleFileUpload(){
   </div>
 
   <div class='main-section py-2'>
-      <div class='body-section px-4 py-2'>
-        <div class="font-medium text-gray-800">설명</div>
-        <div id="editor" bind:this={editorEl} class='p-1 hover:bg-gray-100 cursor-pointer rounded-md overflow -ml-1' on:click={modalBodyClick}>
-          {@html issue.body ? DOMPurify.sanitize(issue.body) : `<div class='text-gray-500'>${placeholder}</div>`}
-        </div>
+    <div class='body-section px-4 py-2'>
+      <div class="font-medium text-gray-800">설명</div>
+      <div id="body-editor" bind:this={editorEl} class='p-1 hover:bg-gray-100 cursor-pointer rounded-md overflow-x-auto -ml-1 w-full' on:click={modalBodyClick}>
+        {@html issue.body ? DOMPurify.sanitize(issue.body) : `<div class='text-gray-500'>${placeholder}</div>`}
+      </div>
+  
+      {#if isModalBodyEditing }
+      <div class="flex flex-row mt-2 gap-2">
+        <button class='btn-primary' on:click={modalBodySave}>저장</button>
+        <button class='btn-outline' on:click={modalBodyCancel}>취소</button>
+      </div>
+      {/if}      
+    </div>
     
-        {#if isModalBodyEditing }
-        <div class="flex flex-row mt-2 gap-2">
-          <button class='btn-primary' on:click={modalBodySave}>저장</button>
-          <button class='btn-outline' on:click={modalBodyCancel}>취소</button>
-        </div>
-        {/if}      
+    <div class='tag-section px-4 py-2'>
+      <div class="text-gray-800 mb-1 font-medium">태그</div>
+      <div class="tag-container">
+        <Tags tags={issue.tags} on:tags={handleTags}/>
       </div>
-      
-      <div class='tag-section px-4 py-2'>
-        <div class="text-gray-800 mb-1 font-medium">태그</div>
-        <div class="tag-container">
-          <Tags tags={issue.tags} on:tags={handleTags}/>
-        </div>
-      </div>
-      <div class="tab-section px-4 py-2">
-        <div class="font-medium text-gray-800 mb-2">활동</div>
+    </div>
+    <div class="tab-section px-4 py-2">
+      <div class="font-medium text-gray-800 mb-2">활동</div>
 
-        <Nav tabpanels="tabpanels">
-          <NavItem target="panel-1" active on:click={async()=>await getComments(1)}><span class="text-sm cursor-pointer">댓글</span></NavItem>
-          <NavItem target="panel-2" on:click={async()=>await getAttachments(1)}><span class="text-sm cursor-pointer">첨부파일</span></NavItem>
-          <NavItem target="panel-3" on:click={async()=>await getHistory(1)}><span class="text-sm cursor-pointer">히스토리</span></NavItem>
-        </Nav>
-        <div class="mt-2">
-          <TabPanels id="tabpanels">
-            <TabPanel id="panel-1" active>
-              <div id='commentInput' bind:this={commentInputEl} class='input mb-4' on:click={commentInputClick}>
-                <div class='text-gray-500'>{placeholder}</div>
-              </div>
-              {#if isCommentEditing }
-              <div class="flex flex-row mt-2 gap-2">
-                <button class='btn-primary' on:click={()=>commentSave('commentInput')}>저장</button>
-                <button class='btn-outline' on:click={()=>commentCancel('commentInput')}>취소</button>
-              </div>
-              {/if}      
-              
-              {#if isActivityLoading }
-                loading...
-              {:else}
-                {#each comments.list as comment, index (index)}
-                <div class='mb-5 '>
-                  <div class='font-medium'>{comment.author.username}<span class='ml-2 text-sm text-gray-500'>{dayjs(comment.updated_at).fromNow()}</span></div>
-                  <div id={`comment-${comment.id}`}>{@html DOMPurify.sanitize(comment.content)}</div>
-                  {#if comment.editing }
-                  <div class="flex flex-row mt-2 gap-2">
-                    <button class='btn-primary' on:click={()=>commentUpdate('comment-'+comment.id, index)}>저장</button>
-                    <button class='btn-outline' on:click={()=>commentCancel('comment-'+comment.id, index)}>취소</button>
-                  </div>
-                  {:else if comment.author.id === $user.pk }
-                  <div class="flex flex-row gap-2 text-sm text-gray-700 ">
-                    <div class='hover:text-gray-900 cursor-pointer' on:click={async ()=> await commentDeleteClick(comment.id)}>삭제</div>
-                    <div class='hover:text-gray-900 cursor-pointer' on:click={()=>commentUpdateClick(index)}>수정</div>
-                  </div>
-                  {/if}
+      <Nav tabpanels="tabpanels">
+        <NavItem target="panel-1" active on:click={async()=>await getComments(1)}><span class="text-sm cursor-pointer">댓글</span></NavItem>
+        <NavItem target="panel-2" on:click={async()=>await getAttachments(1)}><span class="text-sm cursor-pointer">첨부파일</span></NavItem>
+        <NavItem target="panel-3" on:click={async()=>await getHistory(1)}><span class="text-sm cursor-pointer">히스토리</span></NavItem>
+      </Nav>
+      <div class="mt-2">
+        <TabPanels id="tabpanels">
+          <TabPanel id="panel-1" active>
+            <div id='commentInput' bind:this={commentInputEl} class='input text-sm mb-4 cursor-text' on:click={commentInputClick}>
+              <div class='text-gray-500'>{placeholder}</div>
+            </div>
+            {#if isCommentEditing }
+            <div class="flex flex-row mt-2 gap-2">
+              <button class='btn-primary' on:click={()=>commentSave('commentInput')}>저장</button>
+              <button class='btn-outline' on:click={()=>commentCancel('commentInput')}>취소</button>
+            </div>
+            {/if}      
+            
+            {#if isActivityLoading }
+              loading...
+            {:else}
+              {#each comments.list as comment, index (index)}
+              <div class='mb-5 '>
+                <div class='font-medium'>{comment.author.username}<span class='ml-2 text-sm text-gray-500'>{dayjs(comment.updated_at).fromNow()}</span></div>
+                <div id={`comment-${comment.id}`}>{@html DOMPurify.sanitize(comment.content)}</div>
+                {#if comment.editing }
+                <div class="flex flex-row mt-2 gap-2">
+                  <button class='btn-primary' on:click={()=>commentUpdate('comment-'+comment.id, index)}>저장</button>
+                  <button class='btn-outline' on:click={()=>commentCancel('comment-'+comment.id, index)}>취소</button>
                 </div>
-                {/each}
-                <div class="page-nav">
-                  <PaginationNav
-                    totalItems="{comments.count}"
-                    pageSize="{comments.page_size}"
-                    currentPage="{comments.current_page}"
-                    limit="{2}"
-                    showStepOptions="{false}"
-                    on:setPage="{async (e) => await getComments(e.detail.page)}"
-                  />
+                {:else if comment.author.id === $user.pk }
+                <div class="flex flex-row gap-2 text-sm text-gray-700 ">
+                  <div class='hover:text-gray-900 cursor-pointer' on:click={async ()=> await commentDeleteClick(comment.id)}>삭제</div>
+                  <div class='hover:text-gray-900 cursor-pointer' on:click={()=>commentUpdateClick(index)}>수정</div>
                 </div>
-              {/if}
-            </TabPanel>
-            <TabPanel id="panel-2">
-              {#if isActivityLoading }
-                loading...
-              {:else}
-                <div class='mb-4'>
-                  <div id='file-upload-button' class="bg-gray-100 rounded px-4 py-4 cursor-pointer hover:bg-gray-200" on:click={()=>fileInputEl.click()}>
+                {/if}
+              </div>
+              {/each}
+              <div class="page-nav">
+                <PaginationNav
+                  totalItems="{comments.count}"
+                  pageSize="{comments.page_size}"
+                  currentPage="{comments.current_page}"
+                  limit="{2}"
+                  showStepOptions="{false}"
+                  on:setPage="{async (e) => await getComments(e.detail.page)}"
+                />
+              </div>
+            {/if}
+          </TabPanel>
+          <TabPanel id="panel-2">
+            {#if isActivityLoading }
+              loading...
+            {:else}
+              <div class='mb-4'>
+                <div id='file-upload-button' class="bg-gray-100 rounded px-4 py-4 cursor-pointer hover:bg-gray-200" on:click={()=>fileInputEl.click()}>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span>첨부파일 업로드 하기</span>
+                </div>
+                <input class='hidden' bind:this={fileInputEl} type="file" accept="*" on:change={(e)=>onFileSelected(e)}>
+              </div>
+
+              {#each attachments.list as atc, index (index)}
+              <div class='mb-5'>
+                <div class='font-medium mb-1'>{atc.author.username}<span class='ml-2 text-sm text-gray-500'>{dayjs(atc.uploaded_at).fromNow()}</span></div>
+                  <div class='border bg-white rounded px-2 py-2 cursor-pointer hover:bg-gray-100'  on:click={async () => await handleAttachmentDownload(atc.file, atc.filename)}> 
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    <span>첨부파일 업로드 하기</span>
+                    {truncateString(atc.filename, 80)}
                   </div>
-                  <input class='hidden' bind:this={fileInputEl} type="file" accept="*" on:change={(e)=>onFileSelected(e)}>
-                </div>
-
-                {#each attachments.list as atc, index (index)}
-                <div class='mb-5'>
-                  <div class='font-medium mb-1'>{atc.author.username}<span class='ml-2 text-sm text-gray-500'>{dayjs(atc.uploaded_at).fromNow()}</span></div>
-                    <div class='border bg-white rounded px-2 py-2 cursor-pointer hover:bg-gray-100'  on:click={async () => await handleAttachmentDownload(atc.file, atc.filename)}> 
-                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      {truncateString(atc.filename, 80)}
-                    </div>
-                </div>
-                {/each}
-                <div class="page-nav">
-                  <PaginationNav
-                    totalItems="{attachments.count}"
-                    pageSize="{attachments.page_size}"
-                    currentPage="{attachments.current_page}"
-                    limit="{2}"
-                    showStepOptions="{false}"
-                    on:setPage="{async (e) => await getAttachments(e.detail.page)}"
-                  />
-                </div>
-              {/if}
-            </TabPanel>
-            <TabPanel id="panel-3">
-              {#if isActivityLoading }
-                loading..
-              {:else} 
-                {#each history.list as h }
-                <div class="mb-5">
-                  {#if h.field === 'tags'}
-                    {#if h.type === "+"}
+              </div>
+              {/each}
+              <div class="page-nav">
+                <PaginationNav
+                  totalItems="{attachments.count}"
+                  pageSize="{attachments.page_size}"
+                  currentPage="{attachments.current_page}"
+                  limit="{2}"
+                  showStepOptions="{false}"
+                  on:setPage="{async (e) => await getAttachments(e.detail.page)}"
+                />
+              </div>
+            {/if}
+          </TabPanel>
+          <TabPanel id="panel-3">
+            {#if isActivityLoading }
+              loading..
+            {:else} 
+              {#each history.list as h }
+              <div class="mb-5">
+                {#if h.field === 'tags'}
+                  {#if h.type === "+"}
+                  <div>
                     <div>
-                      <div>
-                        <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 추가됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
-                      </div> 
-                      <div class='flex items-center gap-1'>
-                        <div class='label-gray'style='word-break: keep-all;'>{h.new_value}</div>
-                      </div>
+                      <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 추가됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
+                    </div> 
+                    <div class='flex items-center gap-1'>
+                      <div class='label-gray'style='word-break: keep-all;'>{h.new_value}</div>
                     </div>
-                    {:else if h.type === "-"}
+                  </div>
+                  {:else if h.type === "-"}
+                  <div>
                     <div>
-                      <div>
-                        <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 삭제됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
-                      </div> 
-                      <div class='flex items-center gap-1'>
-                        <div class='label-gray' style='word-break: keep-all;'>{h.new_value}</div>
-                      </div>
+                      <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 삭제됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
+                    </div> 
+                    <div class='flex items-center gap-1'>
+                      <div class='label-gray' style='word-break: keep-all;'>{h.new_value}</div>
                     </div>
-                    {/if}
-                  {:else}
-                    {#if h.type === '+'}
-                    <div>
-                      <span class='font-medium'>{h.user.username}</span> 이슈 생성됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
-                    </div>
-                    {:else}
-                    <div>
-                      <div>
-                        <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 업데이트됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
-                      </div> 
-                      <div class='flex items-center gap-1'>
-                        {#if h.field === 'assignee'}
-                        <div class=''>{h.old_value.username || "없음"}</div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        <div class=''>{h.new_value.username || "없음"}</div>
-    
-                        {:else if h.field === 'body'}
-                        <div style='word-break: keep-all;'>{truncateString(stripTags(h.old_value), 200) || "없음"}</div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        <div style='word-break: keep-all;'>{truncateString(stripTags(h.new_value), 200) || "없음"}</div>
-    
-                        {:else if h.field === 'status'}
-                        <div style='word-break: keep-all;'>{stripTags(issueStatus[h.old_value].label) || "없음"}</div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        <div style='word-break: keep-all;'>{stripTags(issueStatus[h.new_value].label) || "없음"}</div>
-    
-                        {:else if h.field === 'title'}
-                        <div style='word-break: keep-all;'>{h.old_value || "없음"}</div>
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
-                          <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                        <div style='word-break: keep-all;'>{h.new_value || "없음"}</div>
-                        {/if}
-                        
-                      </div>
-                    </div>
-                    {/if}
+                  </div>
                   {/if}
-                </div>
-                {/each}
-              
-                <div class="page-nav">
-                  <PaginationNav
-                    totalItems="{history.count}"
-                    pageSize="{history.page_size}"
-                    currentPage="{history.current_page}"
-                    limit="{2}"
-                    showStepOptions="{false}"
-                    on:setPage="{async (e) => await getHistory(e.detail.page)}"
-                  />
-                </div>
-              {/if}
-            </TabPanel>
-          </TabPanels>
-        </div>
+                {:else}
+                  {#if h.type === '+'}
+                  <div>
+                    <span class='font-medium'>{h.user.username}</span> 이슈 생성됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
+                  </div>
+                  {:else}
+                  <div>
+                    <div>
+                      <span class='font-medium'>{h.user.username}</span> {issueAttrNames[h.field]} 업데이트됨<span class='ml-2 text-sm text-gray-500'>{dayjs(h.date).fromNow()}</span>
+                    </div> 
+                    <div class='flex items-center gap-1'>
+                      {#if h.field === 'assignee'}
+                      <div class=''>{h.old_value.username || "없음"}</div>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                      <div class=''>{h.new_value.username || "없음"}</div>
+  
+                      {:else if h.field === 'body'}
+                      <div style='word-break: keep-all;'>{truncateString(stripTags(h.old_value), 200) || "없음"}</div>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                      <div style='word-break: keep-all;'>{truncateString(stripTags(h.new_value), 200) || "없음"}</div>
+  
+                      {:else if h.field === 'status'}
+                      <div style='word-break: keep-all;'>{stripTags(issueStatus[h.old_value].label) || "없음"}</div>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                      <div style='word-break: keep-all;'>{stripTags(issueStatus[h.new_value].label) || "없음"}</div>
+  
+                      {:else if h.field === 'title'}
+                      <div style='word-break: keep-all;'>{h.old_value || "없음"}</div>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 min-w-min" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                      </svg>
+                      <div style='word-break: keep-all;'>{h.new_value || "없음"}</div>
+                      {/if}
+                      
+                    </div>
+                  </div>
+                  {/if}
+                {/if}
+              </div>
+              {/each}
+            
+              <div class="page-nav">
+                <PaginationNav
+                  totalItems="{history.count}"
+                  pageSize="{history.page_size}"
+                  currentPage="{history.current_page}"
+                  limit="{2}"
+                  showStepOptions="{false}"
+                  on:setPage="{async (e) => await getHistory(e.detail.page)}"
+                />
+              </div>
+            {/if}
+          </TabPanel>
+        </TabPanels>
       </div>
+    </div>
     
   </div>
 </section>
 {/if}
 
 <style>
-.tag-container :global(.svelte-tags-input-tag) {
-  /* @apply label-gray; */
-}
-     
 .tag-container :global(.svelte-tags-input-tag-remove){
   margin-left: 6px;  
   font-weight: 700;
-}
-
-.tag-container :global(.svelte-tags-input-layout) {
-  /* background:yellow; */
 }
 </style>
