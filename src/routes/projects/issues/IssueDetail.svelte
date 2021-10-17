@@ -567,7 +567,7 @@ async function handleFileUpload(){
     <div class='tag-section px-4 py-2'>
       <div class="text-gray-800 mb-1 font-medium">태그</div>
       <div class="tag-container">
-        <Tags tags={issue.tags} on:tags={handleTags}/>
+        <Tags tags={issue.tags} on:tags={handleTags} disable={$user.is_readonly} />
       </div>
     </div>
     <div class="tab-section px-4 py-2">

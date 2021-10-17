@@ -7,8 +7,8 @@ import api from '../utils/api';
 const navigate = useNavigate();
 const location = useLocation();
 const demousers = [
-  { email: 'demouser@naver.com', password: 'demouser' },
-  { email: 'chulsoo@naver.com', password: 'chulsoo' },
+  { email: 'project_leader@project.co', password: 'project_leader' },
+  { email: 'project_user@project.co', password: 'project_user' },
   { email: 'readonly@readonly.com', password: 'readonly' }
 ]
 
@@ -35,19 +35,18 @@ async function login_demo(demouser_index){
 </script>
 
 <svelte:head>
-  <title>Login</title>
+  <title>로그인</title>
 </svelte:head>
 
-<section class='flex flex-col items-center my-5'>
-  <div class='login-box flex flex-col rounded-md bg-white py-9 px-7 border'>
-    <h1 class='text-center text-xl pb-5'>Login</h1>
+<section class='flex flex-col items-center my-12'>
+  <h1 class='text-center text-5xl font-extrabold pb-10'>smallissue</h1>
+  <div class='login-box flex flex-col px-7'>
     <div class="space-y-2 flex flex-col">
       <Button>구글로 시작하기</Button>
       <Button>깃헙으로 시작하기</Button>
-      <Button primary on:click={async ()=> await login_demo(0)}>데모유저로 시작하기</Button>
-      <Button primary on:click={async ()=>await login_demo(1)}>데모유저2로 시작하기</Button>
-      <Button primary on:click={async ()=>await login_demo(2)}>데모유저3(읽기전용)으로 시작하기</Button>
-      <div class:hidden={errorMessage === ''} class='bg-red-600 text-white rounded-md px-4 py-2'>{errorMessage}</div>
+      <button class='px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white hover:bg-blue-100' on:click={async ()=> await login_demo(0)}>프로젝트 리더로 시작하기</button>
+      <button class='px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white hover:bg-blue-100' primary on:click={async ()=>await login_demo(1)}>프로젝트 팀원으로 시작하기</button>
+      <button class='px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white hover:bg-blue-100' primary on:click={async ()=>await login_demo(2)}>읽기전용 사용자로 시작하기</button>
     </div>
     
   </div>
