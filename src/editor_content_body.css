@@ -1,0 +1,241 @@
+.editor_content_body body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.4;
+  margin: 1rem;
+}
+
+.editor_content_body figure {
+  display: table;
+  margin: 1rem auto;
+}
+.editor_content_body figure figcaption {
+  color: #999;
+  display: block;
+  margin-top: 0.25rem;
+  text-align: center;
+}
+
+.editor_content_body code {
+  background-color: #e8e8e8;
+  border-radius: 3px;
+  padding: 0.1rem 0.2rem;
+}
+.editor_content_body .mce-content-body:not([dir=rtl]) blockquote {
+  border-left: 2px solid #ccc;
+  margin-left: 1.5rem;
+  padding-left: 1rem;
+}
+.editor_content_body .mce-content-body[dir=rtl] blockquote {
+  border-right: 2px solid #ccc;
+  margin-right: 1.5rem;
+  padding-right: 1rem;
+}
+
+
+.editor_content_body p {
+  display: block;
+  -webkit-margin-before: 1__qem;
+  -webkit-margin-after: 1__qem;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+}
+
+.editor_content_body div {
+  display: block
+}
+
+
+.editor_content_body blockquote {
+  display: block;
+  -webkit-margin-before: 1__qem;
+  -webkit-margin-after: 1em;
+  -webkit-margin-start: 40px;
+  -webkit-margin-end: 40px;
+}
+
+
+.editor_content_body figcaption {
+  display: block
+}
+
+.editor_content_body figure {
+  display: block;
+  -webkit-margin-before: 1em;
+  -webkit-margin-after: 1em;
+  -webkit-margin-start: 40px;
+  -webkit-margin-end: 40px;
+}
+
+.editor_content_body q {
+  display: inline
+}
+.editor_content_body q:before {
+  content: open-quote;
+}
+.editor_content_body q:after {
+  content: close-quote;
+}
+
+
+.editor_content_body hr {
+  display: block;
+  -webkit-margin-before: 0.5em;
+  -webkit-margin-after: 0.5em;
+  -webkit-margin-start: auto;
+  -webkit-margin-end: auto;
+  border-style: inset;
+  border-width: 1px
+}
+
+
+.editor_content_body h1 {
+  display: block;
+  font-size: 2em;
+  -webkit-margin-before: 0.67__qem;
+  -webkit-margin-after: 0.67em;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  font-weight: bold
+}
+
+.editor_content_body h2 {
+  display: block;
+  font-size: 1.5em;
+  -webkit-margin-before: 0.83__qem;
+  -webkit-margin-after: 0.83em;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  font-weight: bold
+}
+.editor_content_body h3 {
+  display: block;
+  font-size: 1.17em;
+  -webkit-margin-before: 1__qem;
+  -webkit-margin-after: 1em;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  font-weight: bold
+}
+.editor_content_body h4 {
+  display: block;
+  -webkit-margin-before: 1.33__qem;
+  -webkit-margin-after: 1.33em;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  font-weight: bold
+}
+.editor_content_body h5 {
+  display: block;
+  font-size: .83em;
+  -webkit-margin-before: 1.67__qem;
+  -webkit-margin-after: 1.67em;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  font-weight: bold
+}
+.editor_content_body h6 {
+  display: block;
+  font-size: .67em;
+  -webkit-margin-before: 2.33__qem;
+  -webkit-margin-after: 2.33em;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  font-weight: bold
+}
+
+
+.editor_content_body table {
+  display: table;
+  border-collapse: separate;
+  border-spacing: 2px;
+  border-color: gray
+}
+.editor_content_body thead {
+  display: table-header-group;
+  vertical-align: middle;
+  border-color: inherit
+}
+.editor_content_body tbody {
+  display: table-row-group;
+  vertical-align: middle;
+  border-color: inherit
+}
+.editor_content_body tfoot {
+  display: table-footer-group;
+  vertical-align: middle;
+  border-color: inherit
+}
+/* for tables without table section elements (can happen with XHTML or dynamically created tables) */
+.editor_content_body table > .editor_content_body tr {
+  vertical-align: middle;
+}
+.editor_content_body col {
+  display: table-column
+}
+.editor_content_body colgroup {
+  display: table-column-group
+}
+.editor_content_body tr {
+  display: table-row;
+  vertical-align: inherit;
+  border-color: inherit
+}
+.editor_content_body td, .editor_content_body th {
+  display: table-cell;
+  vertical-align: inherit
+}
+.editor_content_body th {
+  font-weight: bold
+}
+.editor_content_body caption {
+  display: table-caption;
+  text-align: -webkit-center
+}
+/* lists */
+.editor_content_body ul, .editor_content_body menu, .editor_content_body dir {
+  display: block;
+  list-style-type: disc;
+  -webkit-margin-before: 1__qem;
+  -webkit-margin-after: 1em;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  -webkit-padding-start: 40px
+}
+.editor_content_body ol {
+  display: block;
+  list-style-type: decimal;
+  -webkit-margin-before: 1__qem;
+  -webkit-margin-after: 1em;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+  -webkit-padding-start: 40px
+}
+.editor_content_body li {
+  display: list-item;
+  text-align: -webkit-match-parent;
+}
+.editor_content_body ul ul, .editor_content_body ol ul {
+  list-style-type: circle
+}
+.editor_content_body ol ol ul, .editor_content_body ol ul ul, .editor_content_body ul ol ul, .editor_content_body ul ul ul {
+  list-style-type: square
+}
+.editor_content_body dd {
+  display: block;
+  -webkit-margin-start: 40px
+}
+.editor_content_body dl {
+  display: block;
+  -webkit-margin-before: 1__qem;
+  -webkit-margin-after: 1em;
+  -webkit-margin-start: 0;
+  -webkit-margin-end: 0;
+}
+.editor_content_body dt {
+  display: block
+}
+
+.editor_content_body ol ul,.editor_content_body ul ol,.editor_content_body ul ul,.editor_content_body ol ol {
+  -webkit-margin-before: 0;
+  -webkit-margin-after: 0
+}

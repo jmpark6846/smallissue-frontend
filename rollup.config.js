@@ -65,6 +65,10 @@ export default {
 				replace:[
 					['BASE_URL', JSON.stringify(process.env.BASE_URL)],
 					['FILE_BASE_PATH', JSON.stringify(process.env.FILE_BASE_PATH)],
+					['SI_AWS_REGION', JSON.stringify(process.env.SI_AWS_REGION)],
+					['SI_AWS_ACCESS_KEY_ID', JSON.stringify(process.env.SI_AWS_ACCESS_KEY_ID)],
+					['SI_AWS_SECRET_ACCESS_KEY', JSON.stringify(process.env.SI_AWS_SECRET_ACCESS_KEY)],
+					['SI_AWS_STORAGE_BUCKET_NAME', JSON.stringify(process.env.SI_AWS_STORAGE_BUCKET_NAME)]
 				]
       }),
 		}),

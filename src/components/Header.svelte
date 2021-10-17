@@ -57,6 +57,7 @@ function getUnreadCount(){
 }
 onMount(async () => {
   if($user){
+    
     const notiCountRes = await getUnreadCount();
     if(notiCountRes.status === 200){
       notification.update(v=>({...v, unread_count: notiCountRes.data.unread_count}));

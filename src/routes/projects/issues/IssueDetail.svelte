@@ -1,4 +1,6 @@
 <script>
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { PaginationNav } from 'svelte-paginate'
 import Tags from "svelte-tags-input";
 import dayjs from 'dayjs'
@@ -16,6 +18,7 @@ import truncateString from '../../../utils/truncateString';
 import Dropdown from '../../../components/Dropdown/Dropdown.svelte'
 import DropdownMenu from '../../../components/Dropdown/DropdownMenu.svelte'
 import { issueStatus, stripTags } from '../../../utils/common';
+import '../../../prism'
 
 export let id=null;
 export let status = null;
@@ -52,8 +55,8 @@ const editorSettings = {
     resize:true,
     placeholder,
     statusbar: false,
-    plugins: 'lists advlist codesample',
-    toolbar: 'undo redo styleselect bold italic bullist numlist outdent indent codesample',
+    plugins: 'lists advlist codesample importcss',
+    toolbar: 'undo redo styleselect bold bullist numlist codesample',
 }
 const issueAttrNames = {
   title: '제목',
@@ -82,12 +85,18 @@ $:{
     .then(res=>{
       issue = res[0].data
       comments = res[1].data
+      
       loading = false;
       isActivityLoading = false;
     }).catch(error => error) 
   }
 }
 
+$:{
+  if(editorEl){
+    Prism.highlightAllUnder(editorEl)
+  }
+}
 async function getIssue(){
   try {
     const res = await Promise.all([
@@ -110,6 +119,20 @@ async function getComments(page_num=1){
     console.error(error);
   }
 }
+
+
+const s3 = new S3Client({
+  region: SI_AWS_REGION,
+  credentials: {
+    accessKeyId: SI_AWS_ACCESS_KEY_ID,
+    secretAccessKey: SI_AWS_SECRET_ACCESS_KEY, 
+  }
+})
+
+const command = new GetObjectCommand({
+    Bucket: SI_AWS_STORAGE_BUCKET_NAME,
+    Key: "editor_content_body.css"
+});
 
 onMount(async() => {
   
@@ -151,10 +174,20 @@ async function updateIssue(updated){
   }
 }
 
-function tinymceloaded(elementId, content) {
+async function tinymceloaded(elementId, content) {
+  let stylesheetUrl;
+  try {
+    stylesheetUrl = await getSignedUrl(s3, command, { expiresIn: 3600 })
+  } catch (error) {
+    console.error(error);
+  }
   const ed = new tinymce.Editor(elementId, {
     ...editorSettings,
+    content_css: stylesheetUrl,
+    content_css_cors: true,
     auto_focus: elementId,
+    
+    body_class: 'editor_content_body',
     setup: function(editor) {
       editor.on('init', function(e) {
         editorInstances.push(editor)
@@ -163,6 +196,7 @@ function tinymceloaded(elementId, content) {
           content = ""
         }
         editor.setContent(content);
+        
         if(editor.id === editorEl.id){
           isModalBodyEditing = true;
         }else if(editor.id === commentInputEl.id){
@@ -189,6 +223,7 @@ async function modalBodySave(){
   if(!issue.body){
     editorEl.innerHTML = `<div class='text-gray-500'>${placeholder}</div>`;
   }
+  Prism.highlightAllUnder(editorEl)
 }
 
 function modalBodyCancel(){
@@ -201,6 +236,8 @@ function modalBodyCancel(){
   if(!issue.body){
     editorEl.innerHTML = `<div class='text-gray-500'>${placeholder}</div>`;
   }
+  Prism.highlightAllUnder(editorEl)
+
 }
 
 function commentInputClick(){
@@ -515,7 +552,7 @@ async function handleFileUpload(){
   <div class='main-section py-2'>
     <div class='body-section px-4 py-2'>
       <div class="font-medium text-gray-800">설명</div>
-      <div id="body-editor" bind:this={editorEl} class='p-1 hover:bg-gray-100 cursor-pointer rounded-md overflow-x-auto -ml-1 w-full' on:click={modalBodyClick}>
+      <div id="body-editor" bind:this={editorEl} class='p-1 hover:bg-gray-100 cursor-pointer rounded-md overflow-x-auto -ml-1 w-full editor_content_body' on:click={modalBodyClick}>
         {@html issue.body ? DOMPurify.sanitize(issue.body) : `<div class='text-gray-500'>${placeholder}</div>`}
       </div>
   

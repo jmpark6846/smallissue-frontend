@@ -29,6 +29,7 @@ api.defaults.baseURL = BASE_URL;
 	
 <svelte:head>
 	<script src="https://cdn.tiny.cloud/1/hc0aj9chontfnpqrhoue1ms95l96pb9tcm1uroo8447dr9ek/tinymce/5/tinymce.min.js" referrerpolicy="origin" ></script>
+	<!--  -->
 </svelte:head>
 
 <Notifications>
@@ -87,6 +88,7 @@ api.defaults.baseURL = BASE_URL;
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 @import "./global.css";
+@import "./editor_content_body.css";
 
 @layer components{
 

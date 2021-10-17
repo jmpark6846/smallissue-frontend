@@ -17,6 +17,11 @@
   .min-h-10 {
     min-height: 2.5rem/* 40px */;
   }
+
+  .editor-content h1{
+    
+  }
+  
 }
 
 @layer components{
