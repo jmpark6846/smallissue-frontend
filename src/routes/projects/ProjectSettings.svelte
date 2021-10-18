@@ -5,6 +5,8 @@ import api from "../../utils/api";
 import { project, user } from "../../store";
 import Dropdown from "../../components/Dropdown/Dropdown.svelte";
 import DropdownMenu from "../../components/Dropdown/DropdownMenu.svelte";
+import {getNotificationsContext} from 'svelte-notifications';
+const { addNotification } = getNotificationsContext();
 
 const params = useParams();
 
@@ -45,8 +47,20 @@ async function updateProject(){
   try {
     const res = await api.put(`projects/${$params.id}/`, projectData);
     project.set(res.data)
+    addNotification({
+      text: '저장 완료되었습니다.',
+      position: 'bottom-center',
+      type: 'success',
+      removeAfter: 4000
+    })
   } catch (error) {
-    console.log(error)
+    addNotification({
+      text: '저장에 실패했습니다.',
+      position: 'bottom-center',
+      type: 'danger',
+      removeAfter: 4000
+    })
+    console.log(error);
   }
 }
 

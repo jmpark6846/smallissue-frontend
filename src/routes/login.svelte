@@ -42,8 +42,8 @@ async function login_demo(demouser_index){
   <h1 class='text-center text-5xl font-extrabold pb-10'>smallissue</h1>
   <div class='login-box flex flex-col px-7'>
     <div class="space-y-2 flex flex-col">
-      <Button>구글로 시작하기</Button>
-      <Button>깃헙으로 시작하기</Button>
+      <!-- <Button>구글로 시작하기</Button>
+      <Button>깃헙으로 시작하기</Button> -->
       <button class='px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white hover:bg-blue-100' on:click={async ()=> await login_demo(0)}>프로젝트 리더로 시작하기</button>
       <button class='px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white hover:bg-blue-100' primary on:click={async ()=>await login_demo(1)}>프로젝트 팀원으로 시작하기</button>
       <button class='px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white hover:bg-blue-100' primary on:click={async ()=>await login_demo(2)}>읽기전용 사용자로 시작하기</button>
