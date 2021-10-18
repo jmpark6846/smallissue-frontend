@@ -52,9 +52,11 @@ async function getUnreadNotifications(){
     throw new Error('에러가 발생했습니다.')
   }
 }
+
 function getUnreadCount(){
   return api.get('inbox/notifications/api/unread_count/');
 }
+
 onMount(async () => {
   if($user){
     try {
@@ -143,7 +145,7 @@ function toggleSidebar(){
                       <span class='text-gray-500 hover:text-gray-700 hover:underline cursor-pointer' on:click={markAllAsRead}>전체 읽음</span>
                     </div>
                     {#each $notification.unread_list as noti, index (index)}
-                      <div class='px-4 py-2 hover:bg-gray-100 cursor-pointer' on:click={()=>notificationClick(noti.id, `projects/${noti.target.issue.project_id}/issues/${noti.target.issue.id}/`)}>
+                      <div class='px-4 py-2 hover:bg-gray-100 cursor-pointer' on:click={()=>notificationClick(noti.id, `/projects/${noti.target.issue.project_id}/issues/${noti.target.issue.id}/`)}>
                         <div class='flex flex-col'>
                           <div>
                             <span class='font-medium mr-1'>{noti.actor.username}</span>{noti.description}<span class='ml-2 text-sm text-gray-500'>{dayjs(noti.timestamp).fromNow()}</span>
@@ -179,6 +181,9 @@ function toggleSidebar(){
                 
               </Dropdown>
               <DropdownMenu>
+                <div class='px-4 py-2'>
+                  <span class='font-semibold'>{$user.username}</span>님 반갑습니다 :)
+                </div>
                 <div class='px-4 py-2 hover:bg-gray-100 cursor-pointer' on:click={()=>navigate('/profile')}>
                   프로필
                 </div>

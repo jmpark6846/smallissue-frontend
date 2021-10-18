@@ -22,10 +22,7 @@ window.onclick = function(event) {
 
 
 <style>
-  .modal-section { 
-    overflow:auto;
-    width: calc(100% - 15px);
-  }
+  
   .modal-section.wide{
     width: 100%;
     height: 100%;

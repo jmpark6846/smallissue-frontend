@@ -49,8 +49,8 @@ function handleRouteChange(pathname){
   
     <aside id='sidebar' class='flex-none w-full lg:pt-4 space-y-6 lg:w-60 shadow-sm h-full bg-gray-50 text-sm absolute lg:static top-0 left-0 z-10 hidden lg:block  '>
       <div class='px-2 lg:px-4'>
-        <div class="py-4">
-          <div class="flex items-center px-2" style="height: 46px;">
+        <div class="pt-4">
+          <div class="flex items-center px-2 lg:px-4" style="height: 46px;">
             <button class="focus:outline-none group lg:hidden mr-4" on:click={toggleSidebar}>
               <svg class="w-6 h-6 text-gray-600 group-focus:text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path></svg>    
             </button>
@@ -60,7 +60,7 @@ function handleRouteChange(pathname){
           </div>
         </div>
         <ul class='space-y-1'>
-          <li >
+          <li>
             <a href="/projects/" use:link>
               <div class='sidebar-item py-3 px-2 lg:px-4 flex items-center hover:bg-gray-100 rounded-lg cursor-pointer' class:active={route==='projects'} >
                 <span class='mr-4'>

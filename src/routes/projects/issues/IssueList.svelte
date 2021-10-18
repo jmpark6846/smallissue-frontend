@@ -25,9 +25,10 @@ let issuesSortable;
 let issuesSource = [];
 $: issues = [];
 $: ISSUES_URL = `/projects/${$params.id}/issues/`;
-
+let issue_id = $params['*'];
 let openedIssue = null;
 let isIssueSidebarShow = false;
+
 // $:{
 //   if(issueListEl){
 //     issuesSortable = Sortable.create(issueListEl, {
@@ -56,6 +57,7 @@ option
 }
 */
 
+
 function statusButtonClick(option){
   const buttons = document.getElementsByClassName('status-button')
   for(let i=0;i<buttons.length;i++){
@@ -81,6 +83,7 @@ function statusButtonClick(option){
   }
   filterIssues(options)
 }
+
 function filterIssues(options){ 
   let filtered = [...issuesSource];
   for(const opt of options){
@@ -122,7 +125,13 @@ onMount(async () => {
     issues = [...issuesSource]
     loading=false;
     await tick();
-    // await issueClick(issues[0].id)
+
+    if(issue_id){
+      const loadSuccess = await loadIssue(issue_id);
+      if(loadSuccess){
+        toggleIssueSidebar(true);
+      }
+    }
   } catch (error) {
     console.error(error);
   }
@@ -208,16 +217,42 @@ function updateIssueDisplay(updatedIssue){
   }
   openedIssue = updatedIssue
 }
-function toggleIssueSidebar(){
+
+function toggleIssueSidebar(open){
   const issueSidebarEl = document.getElementById('issue-sidebar');
-  issueSidebarEl.classList.toggle('hidden');
-  issueSidebarEl.classList.toggle('block');
-  isIssueSidebarShow = !isIssueSidebarShow;
-  if(!isIssueSidebarShow){
-    openedIssue = null;
+  if(open === undefined){
+    issueSidebarEl.classList.toggle('hidden');
+    issueSidebarEl.classList.toggle('block');
+    isIssueSidebarShow = !isIssueSidebarShow;
+    if(!isIssueSidebarShow){
+      openedIssue = null;
+    }
+  }else{
+    if(open){
+      issueSidebarEl.classList.remove('hidden');
+      issueSidebarEl.classList.add('block');
+      isIssueSidebarShow=true
+    }else{
+      issueSidebarEl.classList.add('hidden');
+      issueSidebarEl.classList.remove('block');
+      isIssueSidebarShow=false
+      openedIssue = null;
+    }
   }
 }
-async function issueClick(id, index){
+
+async function loadIssue(id){
+  try { 
+    const res = await api.get(`/projects/${$params.id}/issues/${id}`);
+    openedIssue = res.data;
+    return true;
+  } catch (error) {
+    console.error(error);
+    return false;
+  }
+}
+
+async function issueClick(id, sidebarOpen){ 
   if(isIssueSidebarShow){
     if(id === openedIssue.id){
       toggleIssueSidebar()
@@ -230,6 +265,7 @@ async function issueClick(id, index){
     const res = await api.get(ISSUES_URL+id)
     openedIssue = res.data;
   } catch (error) {
+    toggleIssueSidebar(false)
     console.error(error);
   }
 }

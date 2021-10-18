@@ -54,6 +54,19 @@ function cancelUpdate(){
   console.log($project)
   projectData = $project
 } 
+
+async function deleteProject() {
+  if(confirm('프로젝트를 삭제하시겠습니까?')){
+    try {
+      await api.delete(`projects/${$params.id}/`)
+      project.set(null)
+      navigate('/projects');
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
+}
 </script>
 {#if loading }
 <section class='container mx-auto flex-auto px-4 md:px-0 py-5 h-full'>
@@ -89,8 +102,9 @@ function cancelUpdate(){
       </DropdownMenu>
     </div>
     <div class='flex space-x-4'>
-      <button class='btn' on:click={updateProject}>저장</button>
+      <button class='btn-blue' on:click={updateProject}>저장</button>
       <button class='btn' on:click={cancelUpdate}>취소</button>
+      <button class='btn-red' on:click={deleteProject}>삭제</button>
     </div>
   </div>
 </section>

@@ -33,31 +33,31 @@ async function updateProfile(){
     let arr = filename.split('.')
     let ext = arr[arr.length - 1]
     const headers = { 
-    'Content-Type': 'image',
-    // 'Content-Type':'application/octet-stream',
-    'Content-Disposition': 'attachment; filename=profile_pic'+'.'+ext
-  }
+      'Content-Type': 'image',
+      'Content-Disposition': 'attachment; filename=profile_pic'+'.'+ext
+    }
   
     try {
-      await api.post('accounts/profile/', imageUploadEl.files[0], { headers })
-    } catch (error) {
+      await api.put('accounts/profile/', imageUploadEl.files[0], { headers });
+      const res = await api.put('accounts/user/', user)
+      
+      userStore.set(res.data);
+      addNotification({
+        text: '저장 완료되었습니다.',
+        position: 'bottom-center',
+        type: 'success',
+        removeAfter: 4000
+      })
+    }catch (error) {
+      addNotification({
+        text: '저장에 실패했습니다.',
+        position: 'bottom-center',
+        type: 'danger',
+        removeAfter: 4000
+      })
       console.error(error);
     }
   }
-
-  try {
-    const res = await api.put('accounts/user/', user)
-    userStore.set(res.data);
-  } catch (error) {
-    console.error(error);
-  }
-
-  addNotification({
-    text: '저장 완료되었습니다.',
-    position: 'bottom-center',
-    type: 'success',
-    removeAfter: 4000
-  })
 }
 
 

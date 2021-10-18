@@ -78,6 +78,7 @@ async function handleDeleteUser(participationId){
       const participation = participations.list.find(p => p.id === participationId)
       await api.delete(`projects/${$params.id}/participations/${participation.id}/`);
       participations.list = participations.list.filter(p => p.id !== participationId);
+      await getTeams()
     } catch (error) {
       console.error(error);
     }
@@ -164,6 +165,8 @@ async function handleDeleteTeam(id){
     try {
       const res = await api.delete(`projects/${$params.id}/teams/${id}/`);
       teams.list = teams.list.filter(team=> team.id !== id);
+      toggleAddTeammateModal()
+
     } catch (error) {
       console.error(error);
     }
@@ -214,6 +217,24 @@ async function deleteTeammate(id){
         }
       })
       teams.list =  [ ...teams.list ]
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+async function leaveProject(){
+  if(confirm("탈퇴하시겠습니까?")){
+    
+    if($user.pk === $project.leader.id){
+      alert('프로젝트 리더는 탈퇴할 수 없습니다. 리더를 변경 후 탈퇴하거나 프로젝트를 삭제해주세요.');
+      return;
+    }
+
+    try {
+      const participation = participations.list.find(p => p.user.id === $user.pk)
+      await api.delete(`projects/${$params.id}/participations/${participation.id}/`);      
+      navigate('/projects');
     } catch (error) {
       console.error(error);
     }
@@ -286,7 +307,7 @@ async function deleteTeammate(id){
             {/if}
           </td> 
           <td class='flex justify-center'>
-            {#if $user.pk === $project.leader.id}
+            {#if $user.pk === $project.leader.id && $user.pk !== p.user.id}
             <div class='text-center cursor-pointer' on:click={()=>handleDeleteUser(p.id)} >
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -310,7 +331,6 @@ async function deleteTeammate(id){
     />
   </div>
   {/if}
-  
   
   <div class="flex justify-between items-center mb-4">
     <h2 class='text-xl font-semibold'>팀</h2>
@@ -406,6 +426,10 @@ async function deleteTeammate(id){
       </ModalFooter>
     </Modal>
   </div>
+  <div class='mt-8'>
+    <button class='btn-red' on:click={leaveProject}>탈퇴하기</button>
+  </div>
+  
   {/if}
 </section>
 <style>

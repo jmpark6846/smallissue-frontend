@@ -50,7 +50,7 @@ api.defaults.baseURL = BASE_URL;
 			<UserList slot="body"/>
 		</Layout>
 	</PrivateRoute>
-	<PrivateRoute path="projects/:id/issues/" let:location>
+	<PrivateRoute path="projects/:id/issues/*" let:location>
 		<Layout>
 			<h1 slot='header'>
 				{#if $project }
@@ -174,5 +174,9 @@ api.defaults.baseURL = BASE_URL;
 		@apply text-gray-800 bg-gray-200 font-semibold hover:bg-gray-300;
 	}
 	
+	.modal-section { 
+    overflow:auto;
+    width: calc(100% - 15px);
+  }
 }
 </style>

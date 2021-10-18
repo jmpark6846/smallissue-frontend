@@ -70,7 +70,6 @@ $:{
   loading = true;
   isModalBodyEditing = false;
   isCommentEditing = false;
-  console.log(editorInstances)
   editorInstances.forEach(editor => editor.destroy());
   editorInstances = [];
 
